@@ -214,5 +214,74 @@ window.INITIAL_STAMPS = [
       "日落",
       "美国"
     ]
+  },
+  {
+    "id": "gulangyu",
+    "title": "厦门鼓浪屿",
+    "english": "Gulangyu · Xiamen",
+    "category": "人文建筑",
+    "place": "厦门 · 福建 · 中国",
+    "description": "一弯新月停在屋顶，灯火与海风把鼓浪屿的夜色寄进方寸之间。",
+    "tags": [
+      "三城旅行",
+      "厦门",
+      "鼓浪屿",
+      "夜景"
+    ],
+    "color": "#bd8c46",
+    "image": "assets/gulangyu.webp",
+    "original": "assets/gulangyu.png",
+    "number": "013",
+    "custom": false,
+    "width": 1024,
+    "height": 1536,
+    "sourceHash": "c289b953b01c64cd451b86d9627af2f77cdac54a9c13a353edb7320b10ed53b9",
+    "series": "三城旅行 · 风景来信"
+  },
+  {
+    "id": "tianjin-eye",
+    "title": "天津之眼",
+    "english": "Tianjin Eye",
+    "category": "人文建筑",
+    "place": "天津 · 中国",
+    "description": "摩天轮在海河上方缓缓转动，游船载着晴日，穿过城市的倒影。",
+    "tags": [
+      "三城旅行",
+      "天津",
+      "海河",
+      "摩天轮"
+    ],
+    "color": "#7e9fb1",
+    "image": "assets/tianjin-eye.webp",
+    "original": "assets/tianjin-eye.png",
+    "number": "014",
+    "custom": false,
+    "width": 1024,
+    "height": 1536,
+    "sourceHash": "48d59971335cbf1147159ee3d9309336b0dda86612d97d0736375fb924902fe6",
+    "series": "三城旅行 · 风景来信"
+  },
+  {
+    "id": "xiaomai-island",
+    "title": "青岛小麦岛",
+    "english": "Xiaomai Island · Qingdao",
+    "category": "山川旷野",
+    "place": "青岛 · 山东 · 中国",
+    "description": "暖光掠过海岸与红屋顶，远山、灯塔与海浪成为一封金色来信。",
+    "tags": [
+      "三城旅行",
+      "青岛",
+      "小麦岛",
+      "海边"
+    ],
+    "color": "#b18c56",
+    "image": "assets/xiaomai-island.webp",
+    "original": "assets/xiaomai-island.png",
+    "number": "015",
+    "custom": false,
+    "width": 1024,
+    "height": 1536,
+    "sourceHash": "8eb61651823f1610783029419fae73ed848e5256c4bb34b0130bd42e188ff907",
+    "series": "三城旅行 · 风景来信"
   }
 ];

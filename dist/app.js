@@ -5,11 +5,11 @@ const icon = (name) => `<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const safe = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad = n => String(n).padStart(2, '0');
 let stamps = window.INITIAL_STAMPS.map(s => ({ ...s, tags: [...(s.tags || [])] }));
-let favorites = new Set(), databasePromise, toastTimer, activeFlip, editId;
+let favorites = new Set(), toastTimer, activeFlip, editId;
 let preparingPageFlip = false, pageTurnRequest = 0;
 let uploadQueue = [], uploadGeneration = 0, preparingUploads = false;
 try { favorites = new Set(JSON.parse(localStorage.getItem('monet-favorites') || '[]')); } catch {}
-const state = { category: 'all', query: '', page: 0, view: 'album', detailId: null };
+const state = { category: 'all', query: new URLSearchParams(location.search).get('collection') === 'three-cities' ? '三城旅行' : '', page: 0, view: 'album', detailId: null };
 const normalizeTags = value => [...new Set((Array.isArray(value) ? value : String(value).split(/[,，、;；\s#]+/)).map(t => String(t).trim().replace(/^#+/, '').slice(0, 20)).filter(Boolean))].slice(0, 12);
 const newId = () => typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
 
@@ -17,46 +17,38 @@ function notify(message) {
   $('#toast').textContent = message; $('#toast').classList.add('show');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 2700);
 }
-function getDatabase() {
-  if (!databasePromise) databasePromise = new Promise((resolve, reject) => {
-    const request = indexedDB.open('monet-post-collection', 2);
-    request.onupgradeneeded = () => {
-      if (!request.result.objectStoreNames.contains('stamps')) request.result.createObjectStore('stamps', { keyPath: 'id' });
-      if (!request.result.objectStoreNames.contains('edits')) request.result.createObjectStore('edits', { keyPath: 'id' });
-    };
-    request.onsuccess = () => {
-      request.result.onversionchange = () => request.result.close();
-      resolve(request.result);
-    };
-    request.onerror = () => reject(request.error);
-    request.onblocked = () => reject(new Error('storage blocked'));
-  });
-  return databasePromise;
-}
 async function loadCustomStamps() {
   try {
-    const db = await getDatabase();
-    const read = store => new Promise((resolve, reject) => {
-      const req = db.transaction(store).objectStore(store).getAll();
-      req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error);
-    });
-    const [records, edits] = await Promise.all([read('stamps'), read('edits')]);
-    records.sort((a,b) => a.createdAt - b.createdAt);
+    const data = await stampStorage.load();
+    const records = data.stamps.sort((a,b) => a.createdAt - b.createdAt);
     for (const r of records) {
-      const url = URL.createObjectURL(r.file);
-      stamps.push({ ...r, tags: normalizeTags(r.tags || []), image: url, original: url, number: String(stamps.length + 1).padStart(3, '0') });
+      const file = r.file || (r.bytes ? new Blob([r.bytes], {type:r.mime}) : null);
+      const hash = r.sourceHash || (file ? await imageHash(file) : '');
+      if (hash && stamps.some(s => s.sourceHash === hash)) continue;
+      const url = r.image || (file ? URL.createObjectURL(file) : '');
+      if (url) stamps.push({...r, file, sourceHash:hash, tags:normalizeTags(r.tags || []), image:url, original:r.original || url, number:String(stamps.length+1).padStart(3,'0')});
     }
-    const allowedFields = ['title', 'category', 'place', 'description', 'tags'];
-    for (const patch of edits) {
+    const fields = ['title','category','place','description','tags','deletedAt'];
+    for (const patch of data.edits) {
       const stamp = stamps.find(s => s.id === patch.id);
-      if (stamp) for (const key of allowedFields) if (Object.hasOwn(patch, key)) stamp[key] = key === 'tags' ? normalizeTags(patch[key]) : String(patch[key]);
+      if (stamp) for (const key of fields) if (Object.hasOwn(patch,key)) stamp[key] = key === 'tags' ? normalizeTags(patch[key]) : key === 'deletedAt' ? Number(patch[key]) : String(patch[key]);
     }
-    render();
-  } catch { notify('当前浏览器未开放本地存储，仍可欣赏全部原有藏品。'); }
+    updateStorageNote(); render();
+  } catch (error) { updateStorageNote(stampStorage.errorMessage(error)); notify('原有藏品仍可浏览。'+stampStorage.errorMessage(error)); }
+}
+async function imageHash(file) {
+  if (!crypto.subtle) return '';
+  const bytes = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+  return [...new Uint8Array(bytes)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+function updateStorageNote(error) {
+  const text = error || (stampStorage.mode === 'disk' ? '本地文件保存已开启：新增图片、描述和移除记录会保留在电脑中。' : '新增图片、描述和移除记录保存在当前浏览器，不跨设备同步。');
+  $('#storage-status').textContent = text;
+  $$('.storage-note').forEach(note => note.textContent = text);
 }
 function filteredStamps() {
   const q = state.query.trim().toLocaleLowerCase();
-  return stamps.filter(s => (state.category === 'all' || (state.category === 'favorites' ? favorites.has(s.id) : s.category === state.category)) && (!q || [s.title,s.english,s.place,s.category,s.description,...(s.tags || [])].join(' ').toLocaleLowerCase().includes(q)));
+  return stamps.filter(s => !s.deletedAt && (state.category === 'all' || (state.category === 'favorites' ? favorites.has(s.id) : s.category === state.category)) && (!q || [s.title,s.english,s.place,s.category,s.description,...(s.tags || [])].join(' ').toLocaleLowerCase().includes(q)));
 }
 function stampCard(s) {
   const liked = favorites.has(s.id);
@@ -71,7 +63,9 @@ function render() {
   const list = filteredStamps(), pages = Math.max(1, Math.ceil(list.length / 4));
   state.page = Math.min(state.page, pages - 1);
   const visible = list.slice(state.page * 4, state.page * 4 + 4);
-  $('#hero-count').textContent = stamps.length; $('#total-count').textContent = stamps.length;
+  const count = stamps.filter(s => !s.deletedAt).length;
+  $('#hero-count').textContent = count; $('#total-count').textContent = count;
+  $('#removed-count').textContent = stamps.filter(s => s.deletedAt).length;
   $$('.filter').forEach(b => { const active = b.dataset.category === state.category; b.classList.toggle('active', active); b.setAttribute('aria-pressed', active); });
   ['album','grid'].forEach(v => { $('#'+v+'-view').classList.toggle('selected',state.view === v); $('#'+v+'-view').setAttribute('aria-pressed',state.view === v); });
   $('#album-shell').hidden = state.view !== 'album' || !list.length;
@@ -101,7 +95,7 @@ function toggleFavorite(id) {
   catch { notify('心选已更新，但当前浏览器无法保存心选记录。'); }
   render(); if (state.detailId === id) updateDetailFavorite();
 }
-function detailSequence() { const list = filteredStamps(); return list.some(s => s.id === state.detailId) ? list : stamps; }
+function detailSequence() { const list = filteredStamps(); return list.some(s => s.id === state.detailId) ? list : stamps.filter(s => !s.deletedAt); }
 function openDetail(id) {
   const s = stamps.find(s => s.id === id); if (!s) return;
   state.detailId = id;
@@ -113,7 +107,7 @@ function openDetail(id) {
   $('#detail-description').textContent = s.description || '还没有描述，点下方编辑，为这份记忆添一笔。';
   $('#detail-tags').innerHTML = (s.tags || []).map(t => `<button type="button" data-tag="${safe(t)}" aria-label="按标签筛选：${safe(t)}"># ${safe(t)}</button>`).join('');
   $('#detail-size').textContent = `${s.width || 1024} × ${s.height || 1536} px`;
-  $('#detail-series').textContent = s.custom ? '我的新收藏' : '记忆邮票 · 风景来信';
+  $('#detail-series').textContent = s.series || (s.custom ? '我的新收藏' : '记忆邮票 · 风景来信');
   $('#download-image').href = s.original; $('#download-image').download = `${s.title}-记忆邮票.${s.extension || 'png'}`;
   const sequence = detailSequence(), index = sequence.findIndex(s => s.id === id);
   $('#detail-position').textContent = `${pad(index+1)} / ${pad(sequence.length)}`;
@@ -187,6 +181,8 @@ function animatePageFlip(direction, oldSpread) {
 }
 function resetFilters() { state.category = 'all'; state.query = ''; state.page = 0; $('#search').value = ''; render(); }
 $$('.filter').forEach(b => b.addEventListener('click', () => { state.category = b.dataset.category; state.page = 0; render(); }));
+$('#search').value = state.query;
+$('#show-new-stamps').addEventListener('click', () => { state.category='all'; state.query='三城旅行'; state.page=0; $('#search').value=state.query; render(); });
 $('#search').addEventListener('input', e => { state.query = e.target.value; state.page = 0; render(); });
 $('#reset-filters').addEventListener('click',resetFilters);
 $('#album-view').addEventListener('click', () => { state.view = 'album'; render(); });
@@ -242,18 +238,11 @@ $('#edit-form').addEventListener('submit', async event => {
   const button = $('#save-edit'); button.disabled = true;
   try {
     await collectionReady;
-    const db = await getDatabase();
-    await new Promise((resolve,reject) => {
-      const transaction = db.transaction('edits','readwrite');
-      transaction.objectStore('edits').put(patch);
-      transaction.oncomplete = resolve;
-      transaction.onerror = () => reject(transaction.error);
-      transaction.onabort = () => reject(transaction.error);
-    });
+    await stampStorage.edit(patch);
     const stamp = stamps.find(s => s.id === patch.id);
     Object.assign(stamp,patch);
     render(); openDetail(stamp.id); $('#edit-dialog').close(); notify('描述与标签已保存。');
-  } catch { $('#edit-error').textContent = '暂时无法保存，请检查浏览器存储空间后重试。'; }
+  } catch (error) { $('#edit-error').textContent = stampStorage.errorMessage(error); }
   finally { button.disabled = false; }
 });
 $('#detail-tags').addEventListener('click', event => {
@@ -287,6 +276,8 @@ async function prepareUploads(fileList) {
   const files = [...fileList]; if (!files.length) return;
   const generation = uploadGeneration;
   const errors = []; preparingUploads = true; $('#save-stamp').disabled = true;
+  await collectionReady;
+  if (generation !== uploadGeneration) return;
   $('#upload-error').textContent = '正在准备图片…';
   for (const file of files) {
     if (generation !== uploadGeneration) break;
@@ -298,7 +289,10 @@ async function prepareUploads(fileList) {
     try {
       const image = new Image(); image.src = url; await image.decode();
       if (generation !== uploadGeneration) { URL.revokeObjectURL(url); break; }
-      uploadQueue.push({id:newId(),file,url,width:image.naturalWidth,height:image.naturalHeight,title:file.name.replace(/\.[^.]+$/, '').slice(0,40)});
+      const sourceHash = await imageHash(file);
+      if (generation !== uploadGeneration) { URL.revokeObjectURL(url); break; }
+      if (sourceHash && (stamps.some(s => s.sourceHash === sourceHash) || uploadQueue.some(s => s.sourceHash === sourceHash))) { URL.revokeObjectURL(url); errors.push(`${file.name}：这枚邮票已收录；若之前移除，可在“已移除”中恢复。`); continue; }
+      uploadQueue.push({id:newId(),file,url,sourceHash,width:image.naturalWidth,height:image.naturalHeight,title:file.name.replace(/\.[^.]+$/, '').replace(/^\d+[-_、.\s]+/, '').slice(0,40)});
     } catch { URL.revokeObjectURL(url); errors.push(`${file.name}：无法打开这张图片。`); }
   }
   if (generation !== uploadGeneration) return;
@@ -328,27 +322,52 @@ $('#add-form').addEventListener('submit', async event => {
   if (!uploadQueue.length) { $('#upload-error').textContent = '请先选择至少一张图片。'; return; }
   if (uploadQueue.some(item => !item.title.trim())) { $('#upload-error').textContent = '请为每枚邮票填写名称。'; return; }
   const button = $('#save-stamp'); button.disabled = true;
-  const records = uploadQueue.map((item,index) => ({id:'personal-'+newId(),title:item.title.trim(),category:$('#stamp-category').value,place:$('#stamp-place').value.trim(),description:$('#stamp-description').value.trim(),tags:normalizeTags($('#stamp-tags').value),english:'A Personal Memory',custom:true,createdAt:Date.now()+index,file:item.file,extension:{'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[item.file.type],width:item.width,height:item.height}));
+  const records = uploadQueue.map((item,index) => ({id:'personal-'+newId(),title:item.title.trim(),category:$('#stamp-category').value,place:$('#stamp-place').value.trim(),description:$('#stamp-description').value.trim(),tags:normalizeTags($('#stamp-tags').value),english:'A Personal Memory',custom:true,createdAt:Date.now()+index,sourceHash:item.sourceHash,file:item.file,extension:{'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[item.file.type],width:item.width,height:item.height}));
   try {
     await collectionReady;
-    const db = await getDatabase();
-    await new Promise((resolve,reject) => {
-      const transaction = db.transaction('stamps','readwrite');
-      for (const record of records) transaction.objectStore('stamps').put(record);
-      transaction.oncomplete = resolve;
-      transaction.onerror = () => reject(transaction.error);
-      transaction.onabort = () => reject(transaction.error);
-    });
+    await stampStorage.add(records);
     const firstIndex = stamps.length;
     for (const record of records) {
       const url = URL.createObjectURL(record.file);
       stamps.push({...record,image:url,original:url,number:String(stamps.length+1).padStart(3,'0')});
     }
-    state.category = 'all'; state.query = ''; $('#search').value = ''; state.view = 'album'; state.page = Math.floor(firstIndex/4);
+    state.category = 'all'; state.query = ''; $('#search').value = ''; state.view = 'album'; state.page = Math.floor(stamps.slice(0,firstIndex).filter(s => !s.deletedAt).length/4);
     render(); $('#add-dialog').close(); $('#collection').scrollIntoView({behavior:'smooth'});
     notify(`${records.length} 枚新的记忆，已收入集邮册。`);
-  } catch { $('#upload-error').textContent = '未能保存，请检查浏览器存储空间，或通过网站地址访问后重试。'; }
+  } catch (error) { $('#upload-error').textContent = stampStorage.errorMessage(error); }
   finally { button.disabled = false; }
+});
+function renderRemoved() {
+  const removed = stamps.filter(s => s.deletedAt).sort((a,b) => b.deletedAt-a.deletedAt);
+  $('#removed-list').innerHTML = removed.length ? removed.map(s => `<article class="removed-item"><img src="${safe(s.image)}" alt="${safe(s.title)}"><div><strong>${safe(s.title)}</strong><small>${safe(s.place || '我的记忆邮票')}</small></div><button type="button" class="secondary-button" data-restore="${safe(s.id)}">恢复到邮册</button></article>`).join('') : '<p class="removed-empty">这里还没有移除的邮票。移除的邮票可以随时恢复。</p>';
+}
+$('#delete-stamp').addEventListener('click', () => {
+  $('#delete-name').textContent = stamps.find(s => s.id === state.detailId)?.title || '';
+  $('#delete-error').textContent = ''; $('#delete-dialog').showModal();
+});
+$('#cancel-delete').addEventListener('click', () => $('#delete-dialog').close());
+$('#confirm-delete').addEventListener('click', async () => {
+  const stamp = stamps.find(s => s.id === state.detailId); if (!stamp) return;
+  const button = $('#confirm-delete'); button.disabled = true;
+  try {
+    await collectionReady;
+    const deletedAt = Date.now();
+    await stampStorage.edit({id:stamp.id, deletedAt, updatedAt:deletedAt});
+    stamp.deletedAt = deletedAt;
+    $('#delete-dialog').close(); $('#detail-dialog').close(); render();
+    notify('已移入“已移除”，可随时恢复。');
+  } catch (error) { $('#delete-error').textContent = stampStorage.errorMessage(error); }
+  finally { button.disabled = false; }
+});
+$('#show-removed').addEventListener('click', async () => { await collectionReady; renderRemoved(); $('#restore-error').textContent=''; $('#removed-dialog').showModal(); });
+$('#removed-list').addEventListener('click', async event => {
+  const button = event.target.closest('[data-restore]'); if (!button) return;
+  const stamp = stamps.find(s => s.id === button.dataset.restore); if (!stamp) return;
+  button.disabled = true;
+  try {
+    await stampStorage.edit({id:stamp.id,deletedAt:0,updatedAt:Date.now()});
+    stamp.deletedAt = 0; render(); renderRemoved(); notify('这枚记忆已回到邮册。');
+  } catch (error) { $('#restore-error').textContent = stampStorage.errorMessage(error); button.disabled=false; }
 });
 render();
 const collectionReady = loadCustomStamps();
