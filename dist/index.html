@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f2e9">
-  <meta name="description" content="莫奈印记，一册收藏光影与远方的私人邮票集。在方寸之间，重温每一次抵达。">
-  <title>莫奈印记 — 方寸之间，皆是远方</title>
+  <meta name="description" content="记忆邮票，一册收藏光影与远方的私人邮票集。在方寸之间，重温每一次抵达。">
+  <title>记忆邮票 — 方寸之间，皆是远方</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
   <script src="collection.js" defer></script>
@@ -24,13 +24,14 @@
     <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
     <symbol id="i-expand" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
     <symbol id="i-pin" viewBox="0 0 24 24"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L20 8a3.5 3.5 0 0 0-5-5L4 14l-1 7 1-1Z"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L20 5"/></symbol>
   </defs></svg>
   <a class="skip-link" href="#collection">跳转到集邮册</a>
   <header class="site-header wrap">
-    <a class="brand" href="#" aria-label="莫奈印记首页"><span class="brand-icon"><svg><use href="#i-stamp"/></svg></span><span>莫奈印记<small>THE MONET POST</small></span></a>
+    <a class="brand" href="#" aria-label="记忆邮票首页"><span class="brand-icon"><svg><use href="#i-stamp"/></svg></span><span>记忆邮票<small>MEMORY POST</small></span></a>
     <nav aria-label="主导航"><a class="active" href="#collection">我的集邮册</a><a href="#story">关于收藏</a></nav>
-    <button class="add-button" data-add><svg><use href="#i-plus"/></svg><span>添一枚邮票</span></button>
+    <button class="add-button" data-add><svg><use href="#i-plus"/></svg><span>添加新邮票</span></button>
   </header>
 
   <main>
@@ -42,22 +43,22 @@
         <div class="hero-actions"><a class="primary-button" href="#collection">翻开我的集邮册<svg><use href="#i-arrow"/></svg></a><span class="hero-count"><b id="hero-count">12</b> 枚风景 · 一路珍藏</span></div>
         <div class="hero-note"><span class="tiny-star">✳</span> 每一次抵达，都值得一枚纪念。</div>
       </div>
-      <div class="hero-art" aria-label="莫奈印记邮票作品预览">
+      <div class="hero-art" aria-label="记忆邮票邮票作品预览">
         <div class="art-frame"></div><div class="art-caption">LIGHT, LANDSCAPE & LITTLE MEMORIES</div>
         <div class="hero-stamp stamp-back"><img src="assets/danxia.webp" alt="七彩丹霞邮票" width="800" height="1200"></div>
         <div class="hero-stamp stamp-middle"><img src="assets/qarhan.webp" alt="察尔汗盐湖邮票" width="800" height="1200"></div>
         <div class="hero-stamp stamp-front"><img src="assets/beihai.webp" alt="北海公园邮票" width="800" height="1200"></div>
-        <div class="postmark" aria-hidden="true"><span>THE MONET POST</span><strong>方寸<br>留念</strong><small>COLLECT THE MOMENT</small></div>
+        <div class="postmark" aria-hidden="true"><span>MEMORY POST</span><strong>方寸<br>留念</strong><small>COLLECT THE MOMENT</small></div>
         <div class="handwritten">A little piece of somewhere.</div>
         <svg class="post-waves" viewBox="0 0 120 45" aria-hidden="true"><path d="M0 6c20-18 40 18 60 0s40 18 60 0M0 17c20-18 40 18 60 0s40 18 60 0M0 28c20-18 40 18 60 0s40 18 60 0M0 39c20-18 40 18 60 0s40 18 60 0"/></svg>
       </div>
     </section>
 
     <section id="collection" class="collection wrap" aria-labelledby="collection-title">
-      <div class="section-heading"><div><div class="eyebrow">THE COLLECTION <span class="line"></span> VOL. 01</div><h2 id="collection-title">我的集邮册<span>把喜欢的风景，一枚枚安放。</span></h2></div><div class="view-toggle" role="group" aria-label="浏览方式"><button id="album-view" class="selected" aria-pressed="true"><svg><use href="#i-book"/></svg>集邮册</button><button id="grid-view" aria-pressed="false"><svg><use href="#i-grid"/></svg>全览</button></div></div>
+      <div class="section-heading"><div><div class="eyebrow">THE COLLECTION <span class="line"></span> VOL. 01</div><h2 id="collection-title">我的集邮册<span>把喜欢的风景，一枚枚安放。</span></h2></div><div class="collection-actions"><button class="collection-add" data-add><svg><use href="#i-plus"/></svg>添加新邮票</button><div class="view-toggle" role="group" aria-label="浏览方式"><button id="album-view" class="selected" aria-pressed="true"><svg><use href="#i-book"/></svg>集邮册</button><button id="grid-view" aria-pressed="false"><svg><use href="#i-grid"/></svg>全览</button></div></div></div>
       <div class="collection-toolbar">
         <div class="filters" role="group" aria-label="藏品分类"><button class="filter active" data-category="all" aria-pressed="true">全部藏品 <span id="total-count">12</span></button><button class="filter" data-category="山川旷野" aria-pressed="false">山川旷野</button><button class="filter" data-category="湖光园林" aria-pressed="false">湖光园林</button><button class="filter" data-category="人文建筑" aria-pressed="false">人文建筑</button><button class="filter favorite-filter" data-category="favorites" aria-pressed="false"><svg><use href="#i-heart"/></svg>心选</button></div>
-        <label class="search"><svg><use href="#i-search"/></svg><input id="search" type="search" placeholder="寻找一处风景…" aria-label="搜索邮票名称或地点"></label>
+        <label class="search"><svg><use href="#i-search"/></svg><input id="search" type="search" placeholder="寻找一处风景…" aria-label="搜索邮票名称、地点或标签"></label>
       </div>
 
       <div class="album-shell" id="album-shell">
@@ -67,20 +68,47 @@
       </div>
       <div id="grid" class="stamp-grid" hidden aria-live="polite"></div>
       <div id="empty" class="empty-state" hidden><svg><use href="#i-stamp"/></svg><h3>这一页，等一枚心动的风景。</h3><p id="empty-text">试试其他分类，或换一个关键词。</p><button id="reset-filters" class="text-button">查看全部藏品 <span>↗</span></button></div>
-      <div class="album-controls" id="album-controls"><span class="album-hint"><svg><use href="#i-expand"/></svg> 轻点邮票，细赏每一处风景</span><div class="pagination"><button class="round-button prev" id="prev-page" aria-label="上一页"><svg><use href="#i-arrow"/></svg></button><span id="page-indicator">01 <i>/</i> 03</span><button class="round-button" id="next-page" aria-label="下一页"><svg><use href="#i-arrow"/></svg></button></div><span class="album-edition">MONET IMPRESSIONS · 私人珍藏</span></div>
+      <div class="album-controls" id="album-controls"><span class="album-hint"><svg><use href="#i-expand"/></svg> 轻点邮票，细赏每一处风景</span><div class="pagination"><button class="round-button prev" id="prev-page" aria-label="上一页"><svg><use href="#i-arrow"/></svg></button><span id="page-indicator">01 <i>/</i> 03</span><button class="round-button" id="next-page" aria-label="下一页"><svg><use href="#i-arrow"/></svg></button></div><span class="album-edition">MEMORY IMPRESSIONS · 私人珍藏</span></div>
     </section>
 
     <section id="story" class="story wrap" aria-labelledby="story-title">
       <div class="story-visual" aria-hidden="true"><div class="story-lines"></div><span class="story-number">01</span><div class="mini-postcard"><img src="assets/golden-gate.webp" alt="" loading="lazy" width="800" height="1200"></div><div class="story-postmark">寄 给<br><span>未 来 的 自 己</span><small>A MEMORY TO KEEP</small></div></div>
-      <div class="story-copy"><div class="eyebrow">A NOTE FROM THE COLLECTOR</div><h2 id="story-title">风景会远去，<br>印记会留下。</h2><p>有些地方，去过之后便留在了心里。<br>一片湖光、一座山、一场刚好遇见的日落——<br>把它们缩成一枚枚邮票，便有了一册可以重访的远方。</p><span class="story-signature">莫奈印记 <i>With love, from somewhere.</i></span></div>
+      <div class="story-copy"><div class="eyebrow">A NOTE FROM THE COLLECTOR</div><h2 id="story-title">风景会远去，<br>印记会留下。</h2><p>有些地方，去过之后便留在了心里。<br>一片湖光、一座山、一场刚好遇见的日落——<br>把它们缩成一枚枚邮票，便有了一册可以重访的远方。</p><span class="story-signature">记忆邮票 <i>With love, from somewhere.</i></span></div>
     </section>
   </main>
 
-  <footer class="wrap"><a href="#" class="footer-brand"><svg><use href="#i-stamp"/></svg>莫奈印记</a><span>收藏风景，也收藏看风景时的自己。</span><span class="footer-end">MADE OF PLACES & MEMORIES <span>✳</span></span></footer>
+  <footer class="wrap"><a href="#" class="footer-brand"><svg><use href="#i-stamp"/></svg>记忆邮票</a><span>收藏风景，也收藏看风景时的自己。</span><span class="footer-end">MADE OF PLACES & MEMORIES <span>✳</span></span></footer>
 
-  <dialog id="detail-dialog" class="detail-dialog" aria-labelledby="detail-title"><button class="dialog-close icon-button" aria-label="关闭详情"><svg><use href="#i-close"/></svg></button><div class="detail-layout"><div class="detail-art"><img id="detail-image" alt=""><button id="zoom-image" class="zoom-button"><svg><use href="#i-expand"/></svg><span>放大欣赏</span></button></div><div class="detail-info"><div class="eyebrow" id="detail-number"></div><span class="detail-category" id="detail-category"></span><h2 id="detail-title"></h2><p class="detail-english" id="detail-english"></p><div class="detail-location"><svg><use href="#i-pin"/></svg><span id="detail-place"></span></div><p class="detail-description" id="detail-description"></p><div class="detail-rule"></div><div class="detail-meta"><span>收藏系列</span><strong id="detail-series">莫奈印记 · 风景来信</strong></div><div class="detail-meta"><span>图像尺寸</span><strong id="detail-size">1024 × 1536 px</strong></div><div class="detail-actions"><button id="detail-favorite" class="primary-button"><svg><use href="#i-heart"/></svg><span>加入心选</span></button><a id="download-image" class="download-link" download><svg><use href="#i-download"/></svg>保存原图</a></div><div class="detail-browse"><button id="detail-prev" class="text-button">← 上一枚</button><span id="detail-position"></span><button id="detail-next" class="text-button">下一枚 →</button></div></div></div></dialog>
+  <dialog id="detail-dialog" class="detail-dialog" aria-labelledby="detail-title"><button class="dialog-close icon-button" aria-label="关闭详情"><svg><use href="#i-close"/></svg></button><div class="detail-layout"><div class="detail-art"><img id="detail-image" alt=""><button id="zoom-image" class="zoom-button"><svg><use href="#i-expand"/></svg><span>放大欣赏</span></button></div><div class="detail-info"><div class="eyebrow" id="detail-number"></div><span class="detail-category" id="detail-category"></span><h2 id="detail-title"></h2><p class="detail-english" id="detail-english"></p><div class="detail-location"><svg><use href="#i-pin"/></svg><span id="detail-place"></span></div><p class="detail-description" id="detail-description"></p><div class="detail-tags" id="detail-tags" aria-label="邮票标签"></div><button class="edit-stamp-button" id="edit-stamp"><svg><use href="#i-edit"/></svg>编辑描述与标签</button><div class="detail-rule"></div><div class="detail-meta"><span>收藏系列</span><strong id="detail-series">记忆邮票 · 风景来信</strong></div><div class="detail-meta"><span>图像尺寸</span><strong id="detail-size">1024 × 1536 px</strong></div><div class="detail-actions"><button id="detail-favorite" class="primary-button"><svg><use href="#i-heart"/></svg><span>加入心选</span></button><a id="download-image" class="download-link" download><svg><use href="#i-download"/></svg>保存原图</a></div><div class="detail-browse"><button id="detail-prev" class="text-button">← 上一枚</button><span id="detail-position"></span><button id="detail-next" class="text-button">下一枚 →</button></div></div></div></dialog>
   <dialog id="zoom-dialog" class="zoom-dialog" aria-label="邮票原图"><button class="dialog-close icon-button" aria-label="关闭大图"><svg><use href="#i-close"/></svg></button><img id="zoom-art" alt=""><p>轻点空白处或按 Esc 返回</p></dialog>
-  <dialog id="add-dialog" class="add-dialog" aria-labelledby="add-title"><button class="dialog-close icon-button" aria-label="关闭添加窗口"><svg><use href="#i-close"/></svg></button><div class="eyebrow">A NEW MEMORY</div><h2 id="add-title">添一枚新的远方。</h2><p class="add-intro">把喜欢的图片，安放进你的集邮册。</p><form id="add-form"><label class="upload-area" id="upload-area"><input type="file" id="upload-file" accept="image/jpeg,image/png,image/webp" required><img id="upload-preview" alt="新邮票预览" hidden><span id="upload-prompt"><svg><use href="#i-plus"/></svg><strong>选择图片，或拖放到这里</strong><small>JPG / PNG / WebP · 最大 15 MB</small></span></label><div class="form-row"><label>邮票名称<input id="stamp-title" maxlength="40" placeholder="给这处风景起个名字" required></label><label>收藏分类<select id="stamp-category"><option>湖光园林</option><option>山川旷野</option><option>人文建筑</option></select></label></div><label>地点<input id="stamp-place" maxlength="60" placeholder="例如：北京 · 中国"></label><label>收藏手记<textarea id="stamp-description" maxlength="300" rows="2" placeholder="记下关于这枚邮票的小故事…"></textarea></label><p class="storage-note">新藏品保存在当前浏览器，可随时保存原图。</p><p id="upload-error" class="form-error" role="alert"></p><button type="submit" id="save-stamp" class="primary-button">收入集邮册<svg><use href="#i-arrow"/></svg></button></form></dialog>
+  <dialog id="add-dialog" class="add-dialog" aria-labelledby="add-title">
+    <button class="dialog-close icon-button" aria-label="关闭添加窗口"><svg><use href="#i-close"/></svg></button>
+    <div class="eyebrow">COLLECT A NEW MEMORY</div><h2 id="add-title">收藏新的记忆。</h2>
+    <p class="add-intro">把喜欢的图片，变成一枚枚记忆邮票。</p>
+    <form id="add-form">
+      <label class="upload-area" id="upload-area"><input type="file" id="upload-file" accept="image/jpeg,image/png,image/webp" multiple><span><svg><use href="#i-plus"/></svg><strong>选择图片，或拖放到这里</strong><small>支持批量导入 · JPG / PNG / WebP<br>每张最大 15 MB · 每次最多 30 张</small></span></label>
+      <div id="upload-queue" class="upload-queue" aria-live="polite"></div>
+      <p id="upload-summary" class="upload-summary" hidden></p>
+      <div class="form-row"><label>收藏分类<select id="stamp-category"><option>湖光园林</option><option>山川旷野</option><option>人文建筑</option></select></label><label>地点<input id="stamp-place" maxlength="60" placeholder="例如：北京 · 中国"></label></div>
+      <label>标签<input id="stamp-tags" maxlength="250" placeholder="例如：旅行，湖泊，春日"></label><p class="field-hint">用逗号、空格或分号分隔，最多 12 个标签。</p>
+      <label>收藏手记<textarea id="stamp-description" maxlength="1000" rows="3" placeholder="记下关于这些邮票的小故事…"></textarea></label>
+      <p class="storage-note">图片、手记与标签保存在当前浏览器，刷新后仍会保留。</p><p id="upload-error" class="form-error" role="alert"></p>
+      <button type="submit" id="save-stamp" class="primary-button">收入集邮册<svg><use href="#i-arrow"/></svg></button>
+    </form>
+  </dialog>
+  <dialog id="edit-dialog" class="add-dialog edit-dialog" aria-labelledby="edit-title">
+    <button class="dialog-close icon-button" aria-label="关闭编辑窗口"><svg><use href="#i-close"/></svg></button>
+    <div class="eyebrow">MAKE THE MEMORY YOURS</div><h2 id="edit-title">为记忆添一笔。</h2>
+    <div class="edit-preview"><img id="edit-preview-image" alt=""><div><strong id="edit-preview-name"></strong><span>留下你的描述与标签</span></div></div>
+    <form id="edit-form">
+      <div class="form-row"><label>邮票名称<input id="edit-name" maxlength="40" required></label><label>收藏分类<select id="edit-category"><option>湖光园林</option><option>山川旷野</option><option>人文建筑</option></select></label></div>
+      <label>地点<input id="edit-place" maxlength="60" placeholder="这份记忆来自哪里？"></label>
+      <label>标签<input id="edit-tags" maxlength="250" placeholder="例如：旅行，湖泊，春日"></label><p class="field-hint">用逗号或空格分隔；标签也可以用来搜索邮票。</p>
+      <label>邮票描述<textarea id="edit-description" maxlength="1000" rows="5" placeholder="写下关于这枚邮票的故事…"></textarea></label>
+      <p class="storage-note">修改保存在当前浏览器，原始图片会完整保留。</p><p id="edit-error" class="form-error" role="alert"></p>
+      <div class="edit-form-actions"><button type="button" id="cancel-edit" class="secondary-button">取消</button><button type="submit" id="save-edit" class="primary-button">保存修改<svg><use href="#i-check"/></svg></button></div>
+    </form>
+  </dialog>
   <div class="toast" id="toast" role="status"></div>
 </body>
 </html>

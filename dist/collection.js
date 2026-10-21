@@ -10,7 +10,12 @@ window.INITIAL_STAMPS = [
     "image": "assets/beihai.webp",
     "original": "assets/beihai.png",
     "number": "001",
-    "custom": false
+    "custom": false,
+    "tags": [
+      "湖光",
+      "园林",
+      "北京"
+    ]
   },
   {
     "id": "summer-palace",
@@ -23,7 +28,12 @@ window.INITIAL_STAMPS = [
     "image": "assets/summer-palace.webp",
     "original": "assets/summer-palace.png",
     "number": "002",
-    "custom": false
+    "custom": false,
+    "tags": [
+      "园林",
+      "湖光",
+      "北京"
+    ]
   },
   {
     "id": "danxia",
@@ -36,7 +46,12 @@ window.INITIAL_STAMPS = [
     "image": "assets/danxia.webp",
     "original": "assets/danxia.png",
     "number": "003",
-    "custom": false
+    "custom": false,
+    "tags": [
+      "山川",
+      "丹霞",
+      "甘肃"
+    ]
   },
   {
     "id": "qarhan",
@@ -49,7 +64,12 @@ window.INITIAL_STAMPS = [
     "image": "assets/qarhan.webp",
     "original": "assets/qarhan.png",
     "number": "004",
-    "custom": false
+    "custom": false,
+    "tags": [
+      "盐湖",
+      "青海",
+      "湖光"
+    ]
   },
   {
     "id": "laojun",
@@ -62,7 +82,12 @@ window.INITIAL_STAMPS = [
     "image": "assets/laojun.webp",
     "original": "assets/laojun.png",
     "number": "005",
-    "custom": false
+    "custom": false,
+    "tags": [
+      "山川",
+      "云海",
+      "河南"
+    ]
   },
   {
     "id": "heidu",
@@ -75,7 +100,12 @@ window.INITIAL_STAMPS = [
     "image": "assets/heidu.webp",
     "original": "assets/heidu.png",
     "number": "006",
-    "custom": false
+    "custom": false,
+    "tags": [
+      "山川",
+      "旷野",
+      "青海"
+    ]
   },
   {
     "id": "yuanming",
@@ -88,7 +118,12 @@ window.INITIAL_STAMPS = [
     "image": "assets/yuanming.webp",
     "original": "assets/yuanming.png",
     "number": "007",
-    "custom": false
+    "custom": false,
+    "tags": [
+      "园林",
+      "遗址",
+      "北京"
+    ]
   },
   {
     "id": "chaka",
@@ -101,7 +136,12 @@ window.INITIAL_STAMPS = [
     "image": "assets/chaka.webp",
     "original": "assets/chaka.png",
     "number": "008",
-    "custom": false
+    "custom": false,
+    "tags": [
+      "盐湖",
+      "天空之镜",
+      "青海"
+    ]
   },
   {
     "id": "yellow-crane",
@@ -114,7 +154,12 @@ window.INITIAL_STAMPS = [
     "image": "assets/yellow-crane.webp",
     "original": "assets/yellow-crane.png",
     "number": "009",
-    "custom": false
+    "custom": false,
+    "tags": [
+      "古建筑",
+      "楼阁",
+      "湖北"
+    ]
   },
   {
     "id": "luojia",
@@ -127,7 +172,12 @@ window.INITIAL_STAMPS = [
     "image": "assets/luojia.webp",
     "original": "assets/luojia.png",
     "number": "010",
-    "custom": false
+    "custom": false,
+    "tags": [
+      "寺庙",
+      "海边",
+      "福建"
+    ]
   },
   {
     "id": "shandong",
@@ -140,7 +190,12 @@ window.INITIAL_STAMPS = [
     "image": "assets/shandong.webp",
     "original": "assets/shandong.png",
     "number": "011",
-    "custom": false
+    "custom": false,
+    "tags": [
+      "校园",
+      "雪景",
+      "山东"
+    ]
   },
   {
     "id": "golden-gate",
@@ -153,6 +208,11 @@ window.INITIAL_STAMPS = [
     "image": "assets/golden-gate.webp",
     "original": "assets/golden-gate.png",
     "number": "012",
-    "custom": false
+    "custom": false,
+    "tags": [
+      "桥梁",
+      "日落",
+      "美国"
+    ]
   }
 ];
