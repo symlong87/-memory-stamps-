@@ -137,6 +137,10 @@ class AlbumHandler(SimpleHTTPRequestHandler):
 
 
 if __name__ == '__main__':
+    recovery = ROOT / 'restore-originals.py'
+    if recovery.exists():
+        import runpy
+        runpy.run_path(str(recovery), run_name='__main__')
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=8765)
     parser.add_argument('--open', action='store_true')
