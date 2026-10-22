@@ -1,0 +1,51 @@
+[
+  {
+    "path": "dist/assets/gulangyu.png",
+    "sha256": "c289b953b01c64cd451b86d9627af2f77cdac54a9c13a353edb7320b10ed53b9",
+    "size": 3564016,
+    "parts": [
+      "gulangyu.01.part",
+      "gulangyu.02.part",
+      "gulangyu.03.part",
+      "gulangyu.04.part",
+      "gulangyu.05.part",
+      "gulangyu.06.part",
+      "gulangyu.07.part",
+      "gulangyu.08.part",
+      "gulangyu.09.part",
+      "gulangyu.10.part"
+    ]
+  },
+  {
+    "path": "dist/assets/tianjin-eye.png",
+    "sha256": "48d59971335cbf1147159ee3d9309336b0dda86612d97d0736375fb924902fe6",
+    "size": 3316163,
+    "parts": [
+      "tianjin-eye.01.part",
+      "tianjin-eye.02.part",
+      "tianjin-eye.03.part",
+      "tianjin-eye.04.part",
+      "tianjin-eye.05.part",
+      "tianjin-eye.06.part",
+      "tianjin-eye.07.part",
+      "tianjin-eye.08.part",
+      "tianjin-eye.09.part"
+    ]
+  },
+  {
+    "path": "dist/assets/xiaomai-island.png",
+    "sha256": "8eb61651823f1610783029419fae73ed848e5256c4bb34b0130bd42e188ff907",
+    "size": 3214156,
+    "parts": [
+      "xiaomai-island.01.part",
+      "xiaomai-island.02.part",
+      "xiaomai-island.03.part",
+      "xiaomai-island.04.part",
+      "xiaomai-island.05.part",
+      "xiaomai-island.06.part",
+      "xiaomai-island.07.part",
+      "xiaomai-island.08.part",
+      "xiaomai-island.09.part"
+    ]
+  }
+]
