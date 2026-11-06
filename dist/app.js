@@ -173,7 +173,7 @@ function render() {
   if ($('#manage-dialog').open) renderManage();
   $$('.filter').forEach(b => { const active = b.dataset.category === state.category; b.classList.toggle('active', active); b.setAttribute('aria-pressed', active); });
   ['album','grid'].forEach(v => { $('#'+v+'-view').classList.toggle('selected',state.view === v); $('#'+v+'-view').setAttribute('aria-pressed',state.view === v); });
-  $('#album-shell').hidden = state.view !== 'album' || !list.length;
+  $('#reader-book').hidden = $('#album-shell').hidden = state.view !== 'album' || !list.length;
   $('#grid').hidden = state.view !== 'grid' || !list.length;
   $('#album-controls').hidden = !list.length; $('#empty').hidden = !!list.length;
   $('#empty-text').textContent = state.category === 'favorites' ? '轻点邮票上的爱心，把喜欢的风景收入心选。' : '试试其他分类，或换一个关键词。';

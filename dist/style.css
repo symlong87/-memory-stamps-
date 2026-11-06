@@ -228,3 +228,27 @@ footer { color:#626d59; font-size:11px; }
   .album-page[data-side="single"] { padding-top:20px; padding-bottom:17px; }
   .album-page[data-side="single"] .page-stamps { padding-top:0; padding-bottom:0; }
 }
+
+/* Quiet, generous turn targets along the outer edges of the book. */
+.reader-book { position:relative; max-width:1100px; margin-inline:auto; }
+.edge-turn {
+  position:absolute; top:50%; transform:translateY(-50%); z-index:9;
+  width:52px; height:56%; min-height:140px; max-height:340px;
+  display:grid; place-items:center; padding:0; border:0; border-radius:8px;
+  background:transparent; color:#2d483e; opacity:.28;
+  transition:opacity .18s ease; touch-action:manipulation;
+}
+.edge-turn-prev { left:-26px; }
+.edge-turn-next { right:-26px; }
+.edge-turn svg { width:22px; height:22px; stroke-width:1.5; }
+.edge-turn-prev svg { transform:rotate(180deg); }
+.edge-turn:hover:enabled { opacity:.8; }
+.edge-turn:focus-visible { opacity:1; outline:2px solid #a57943; outline-offset:1px; }
+.edge-turn:disabled { opacity:0; pointer-events:none; }
+@media (max-width:650px) {
+  .edge-turn { width:44px; height:52%; max-height:280px; }
+  .edge-turn-prev { left:-5px; }
+  .edge-turn-next { right:-5px; }
+  .edge-turn svg { width:20px; height:20px; }
+}
+@media (hover:none) { .edge-turn:enabled:not(:focus-visible) { opacity:.35; } }

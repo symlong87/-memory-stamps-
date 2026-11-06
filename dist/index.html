@@ -7,15 +7,16 @@
   <meta name="description" content="记忆邮票，一册收藏光影与远方的私人邮票集。在方寸之间，重温每一次抵达。">
   <title>记忆邮票 — 方寸之间，皆是远方</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=20261106-3">
-  <script src="collection.js?v=20261106-3" defer></script>
-  <script src="storage.js?v=20261106-3" defer></script>
-  <script src="app.js?v=20261106-3" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261106-4">
+  <script src="collection.js?v=20261106-4" defer></script>
+  <script src="storage.js?v=20261106-4" defer></script>
+  <script src="app.js?v=20261106-4" defer></script>
 </head>
 <body data-page="home">
   <svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
     <symbol id="i-stamp" viewBox="0 0 24 24"><path d="M4 3h3a2 2 0 0 0 4 0h2a2 2 0 0 0 4 0h3v3a2 2 0 0 0 0 4v4a2 2 0 0 0 0 4v3h-3a2 2 0 0 0-4 0h-2a2 2 0 0 0-4 0H4v-3a2 2 0 0 0 0-4v-4a2 2 0 0 0 0-4V3Z"/><path d="M8 8h8v8H8z"/></symbol>
     <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
     <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.6 5.6 0 0 0-8 .1l-.8.8-.8-.8a5.6 5.6 0 0 0-8 7.8L12 21l8.8-8.5a5.6 5.6 0 0 0 0-7.9Z"/></symbol>
     <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
@@ -66,14 +67,18 @@
         <div class="filters" role="group" aria-label="藏品分类"><button class="filter active" data-category="all" aria-pressed="true">全部藏品 <span id="total-count">25</span></button><button class="filter" data-category="山川旷野" aria-pressed="false">山川旷野</button><button class="filter" data-category="湖光园林" aria-pressed="false">湖光园林</button><button class="filter" data-category="人文建筑" aria-pressed="false">人文建筑</button><button class="filter favorite-filter" data-category="favorites" aria-pressed="false"><svg><use href="#i-heart"/></svg>心选</button></div>
         <div class="series-filters"><span>按系列</span><button type="button" id="show-new-stamps" class="new-stamps-link">风景来信 · 第二辑 ↗</button><button type="button" id="show-travel-stamps" class="new-stamps-link">三城旅行 ↗</button></div>
       </div>
+      <div class="reader-book" id="reader-book">
       <div class="album-shell" id="album-shell">
         <div class="album-spread" id="album-spread" aria-live="polite"></div>
         <div class="book-spine" aria-hidden="true"><i></i><i></i><i></i></div>
         <div class="ribbon" aria-hidden="true"></div>
       </div>
+        <button class="edge-turn edge-turn-prev" id="prev-page" aria-label="上一页" aria-controls="album-spread"><svg><use href="#i-chevron"/></svg></button>
+        <button class="edge-turn edge-turn-next" id="next-page" aria-label="下一页" aria-controls="album-spread"><svg><use href="#i-chevron"/></svg></button>
+      </div>
       <div id="grid" class="stamp-grid" hidden aria-live="polite"></div>
       <div id="empty" class="empty-state" hidden><svg><use href="#i-stamp"/></svg><h3>这一页，等一枚心动的风景。</h3><p id="empty-text">试试其他分类，或换一个关键词。</p><button id="reset-filters" class="text-button">查看全部藏品 <span>↗</span></button></div>
-      <div class="album-controls" id="album-controls"><span class="album-hint"><svg><use href="#i-expand"/></svg> 轻点邮票，细赏每一处风景</span><div class="pagination"><button class="round-button prev" id="prev-page" aria-label="上一页"><svg><use href="#i-arrow"/></svg></button><span id="page-indicator" role="status" aria-live="polite">01–02 <i>/</i> 25</span><button class="round-button" id="next-page" aria-label="下一页"><svg><use href="#i-arrow"/></svg></button></div><span class="album-edition">MEMORY IMPRESSIONS · 私人珍藏</span></div>
+      <div class="album-controls" id="album-controls"><span class="album-hint"><svg><use href="#i-expand"/></svg> 轻点邮票，细赏每一处风景</span><div class="pagination"><span id="page-indicator" role="status" aria-live="polite">01–02 <i>/</i> 25</span></div><span class="album-edition">MEMORY IMPRESSIONS · 私人珍藏</span></div>
     </section>
 
   </main>
