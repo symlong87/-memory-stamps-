@@ -7,12 +7,76 @@ const pad = n => String(n).padStart(2, '0');
 let stamps = window.INITIAL_STAMPS.map(s => ({ ...s, tags: [...(s.tags || [])] }));
 let favorites = new Set(), toastTimer, activeFlip, editId;
 let preparingPageFlip = false, pageTurnRequest = 0;
+let routeSequence = 0, routeAnimations = [], preloadTimer, routeTarget;
+const imageCache = new Map();
 let uploadQueue = [], uploadGeneration = 0, preparingUploads = false;
 try { favorites = new Set(JSON.parse(localStorage.getItem('monet-favorites') || '[]')); } catch {}
 const collectionQueries = {'three-cities':'三城旅行', 'landscape-letters':'风景来信第二辑'};
-const state = { category: 'all', query: collectionQueries[new URLSearchParams(location.search).get('collection')] || '', page: 0, view: 'album', detailId: null };
+const state = { category: 'all', query: collectionQueries[new URLSearchParams(location.search).get('collection')] || '', page: 0, view: 'album', detailId: null, screen: 'home' };
 const normalizeTags = value => [...new Set((Array.isArray(value) ? value : String(value).split(/[,，、;；\s#]+/)).map(t => String(t).trim().replace(/^#+/, '').slice(0, 20)).filter(Boolean))].slice(0, 12);
 const newId = () => typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+
+function pageFromLocation() { return location.hash === '#collection' ? 'collection' : 'home'; }
+function setScreen(page) {
+  routeTarget = page; state.screen = page;
+  document.body.dataset.page = page;
+  for (const section of $$('.screen')) {
+    section.hidden = section.id !== page;
+    section.inert = section.hidden;
+  }
+  for (const link of $$('.site-header nav [data-route]')) {
+    const active = link.dataset.route === page;
+    link.classList.toggle('active', active);
+    if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
+  }
+  document.title = page === 'home' ? '记忆邮票 — 方寸之间，皆是远方' : '我的集邮册 · 记忆邮票';
+}
+async function showScreen(page, {push = true, animate = true, focus = true} = {}) {
+  if (!['home','collection'].includes(page)) return;
+  routeTarget = page;
+  const request = ++routeSequence;
+  routeAnimations.forEach(animation => animation.cancel()); routeAnimations = [];
+  cancelPageFlip();
+  if (push) {
+    const url = new URL(location.href); url.hash = page === 'collection' ? 'collection' : 'home';
+    if (url.href !== location.href) history.pushState({page}, '', url);
+  }
+  const outgoing = $$('.screen').find(section => !section.hidden), incoming = $('#'+page);
+  const motion = animate && outgoing !== incoming && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.body.classList.toggle('is-navigating', motion);
+  try {
+    if (motion && outgoing) {
+      outgoing.inert = true;
+      const exit = outgoing.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:page === 'collection' ? 'scale(1.025)' : 'scale(.99)'}], {duration:170,easing:'ease-in',fill:'forwards'});
+      routeAnimations.push(exit); await exit.finished.catch(() => {});
+      if (request !== routeSequence) return;
+    }
+    setScreen(page);
+    window.scrollTo({top:0,behavior:'instant'});
+    schedulePreload();
+    if (motion) {
+      incoming.inert = true;
+      const enter = incoming.animate([{opacity:0,transform:'translateY(12px) scale(.985)'},{opacity:1,transform:'translateY(0) scale(1)'}], {duration:330,easing:'cubic-bezier(.2,.65,.3,1)',fill:'both'});
+      routeAnimations.push(enter); await enter.finished.catch(() => {});
+      if (request !== routeSequence) return;
+    }
+    if (focus) $(page === 'home' ? '#hero-title' : '#collection-title').focus({preventScroll:true});
+  } finally {
+    if (request === routeSequence) {
+      routeAnimations.forEach(animation => animation.cancel()); routeAnimations = [];
+      incoming.inert = false; document.body.classList.remove('is-navigating');
+    }
+  }
+}
+document.addEventListener('click', event => {
+  const link = event.target.closest('a[data-route]');
+  if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  event.preventDefault(); showScreen(link.dataset.route);
+});
+window.addEventListener('popstate', () => showScreen(pageFromLocation(), {push:false,focus:false}));
+window.addEventListener('hashchange', () => {
+  if (pageFromLocation() !== routeTarget) showScreen(pageFromLocation(), {push:false,focus:false});
+});
 
 function notify(message) {
   $('#toast').textContent = message; $('#toast').classList.add('show');
@@ -51,19 +115,46 @@ function filteredStamps() {
   const q = state.query.trim().toLocaleLowerCase();
   return stamps.filter(s => !s.deletedAt && (state.category === 'all' || (state.category === 'favorites' ? favorites.has(s.id) : s.category === state.category)) && (!q || [s.title,s.english,s.place,s.category,s.description,...(s.tags || [])].join(' ').toLocaleLowerCase().includes(q)));
 }
-function stampCard(s) {
+function stampCard(s, eager = false) {
   const liked = favorites.has(s.id);
-  return `<article class="stamp-card"><button class="stamp-open" data-open="${safe(s.id)}" aria-label="欣赏${safe(s.title)}邮票"><span class="stamp-mount"><img src="${safe(s.image)}" alt="${safe(s.title)} · 记忆邮票" width="800" height="1200" loading="lazy"><span class="mount-strip" aria-hidden="true"></span></span><span class="stamp-caption"><span class="stamp-title">${safe(s.title)}</span><span class="stamp-id">N° ${safe(s.number)}</span></span><span class="stamp-place">${safe(s.place || '一处值得珍藏的风景')}</span><span class="stamp-tags">${(s.tags || []).slice(0,2).map(t => `<span># ${safe(t)}</span>`).join('')}</span></button><button class="favorite-button ${liked ? 'is-favorite' : ''}" data-favorite="${safe(s.id)}" aria-label="${liked ? '取消心选' : '加入心选'}：${safe(s.title)}" aria-pressed="${liked}">${icon('heart')}</button></article>`;
+  return `<article class="stamp-card"><button class="stamp-open" data-open="${safe(s.id)}" aria-label="欣赏${safe(s.title)}邮票"><span class="stamp-mount"><img src="${safe(s.image)}" alt="${safe(s.title)} · 记忆邮票" width="800" height="1200" loading="${eager ? 'eager' : 'lazy'}" decoding="async"><span class="mount-strip" aria-hidden="true"></span></span><span class="stamp-caption"><span class="stamp-title">${safe(s.title)}</span><span class="stamp-id">N° ${safe(s.number)}</span></span><span class="stamp-place">${safe(s.place || '一处值得珍藏的风景')}</span><span class="stamp-tags">${(s.tags || []).slice(0,2).map(t => `<span># ${safe(t)}</span>`).join('')}</span></button><button class="favorite-button ${liked ? 'is-favorite' : ''}" data-favorite="${safe(s.id)}" aria-label="${liked ? '取消心选' : '加入心选'}：${safe(s.title)}" aria-pressed="${liked}">${icon('heart')}</button></article>`;
 }
 function albumPage(items, side, pageNumber) {
   const category = ['all','favorites'].includes(state.category) ? '风景来信' : state.category;
-  return `<div class="album-page" data-side="${side}"><div class="page-heading"><span>${side === 'left' ? 'MEMORY IMPRESSIONS' : 'PLACES TO REMEMBER'}</span><span class="page-heading-cn">${category} · ${pad(pageNumber)}</span></div><div class="page-stamps">${items.length ? items.map(stampCard).join('') : '<div class="blank-page"><span>✳</span><p>下一枚风景，<br>正在路上。</p><small>ROOM FOR ANOTHER MEMORY</small></div>'}</div><div class="page-footer"><span>${items.length ? '藏品 '+items.map(s => s.number).join(' · ') : '留一页，给下一次抵达'}</span><b>— ${pad(pageNumber)} —</b><span>MEMORY POST</span></div></div>`;
+  return `<div class="album-page" data-side="${side}"><div class="page-heading"><span>${side === 'left' ? 'MEMORY IMPRESSIONS' : 'PLACES TO REMEMBER'}</span><span class="page-heading-cn">${category} · ${pad(pageNumber)}</span></div><div class="page-stamps">${items.length ? items.map(s => stampCard(s, true)).join('') : '<div class="blank-page"><span>✳</span><p>下一枚风景，<br>正在路上。</p><small>ROOM FOR ANOTHER MEMORY</small></div>'}</div><div class="page-footer"><span>${items.length ? '藏品 '+items.map(s => s.number).join(' · ') : '留一页，给下一次抵达'}</span><b>— ${pad(pageNumber)} —</b><span>MEMORY POST</span></div></div>`;
+}
+function spreadHTML(list, page) {
+  const visible = list.slice(page*4,page*4+4);
+  return albumPage(visible.slice(0,2),'left',page*2+1) + albumPage(visible.slice(2),'right',page*2+2);
+}
+function updatePager() {
+  const pages = Math.max(1,Math.ceil(filteredStamps().length/4));
+  $('#page-indicator').innerHTML = `${pad(state.page+1)} <i>/</i> ${pad(pages)}`;
+  const busy = !!activeFlip || preparingPageFlip;
+  $('#prev-page').disabled = busy || state.page === 0;
+  $('#next-page').disabled = busy || state.page >= pages-1;
+}
+function warmImage(url) {
+  if (imageCache.has(url)) return imageCache.get(url).promise;
+  const image = new Image(); image.decoding = 'async'; image.fetchPriority = 'low'; image.src = url;
+  const entry = {image, promise:image.decode().catch(() => {})};
+  imageCache.set(url,entry); return entry.promise;
+}
+function schedulePreload() {
+  clearTimeout(preloadTimer);
+  preloadTimer = setTimeout(() => {
+    if (state.view !== 'album') return;
+    const list = filteredStamps();
+    const nearby = state.screen === 'home' ? list.slice(state.page*4,state.page*4+8) : [...list.slice(Math.max(0,state.page-1)*4,state.page*4),...list.slice((state.page+1)*4,(state.page+2)*4)];
+    const keep = new Set(nearby.map(s => s.image));
+    for (const url of imageCache.keys()) if (!keep.has(url)) imageCache.delete(url);
+    nearby.forEach(s => warmImage(s.image));
+  },100);
 }
 function render() {
   cancelPageFlip();
   const list = filteredStamps(), pages = Math.max(1, Math.ceil(list.length / 4));
   state.page = Math.min(state.page, pages - 1);
-  const visible = list.slice(state.page * 4, state.page * 4 + 4);
   const count = stamps.filter(s => !s.deletedAt).length;
   $('#hero-count').textContent = count; $('#total-count').textContent = count;
   $('#removed-count').textContent = stamps.filter(s => s.deletedAt).length;
@@ -74,15 +165,14 @@ function render() {
   $('#album-controls').hidden = !list.length; $('#empty').hidden = !!list.length;
   $('#empty-text').textContent = state.category === 'favorites' ? '轻点邮票上的爱心，把喜欢的风景收入心选。' : '试试其他分类，或换一个关键词。';
   if (state.view === 'album') {
-    $('#album-spread').innerHTML = albumPage(visible.slice(0,2),'left',state.page*2+1) + albumPage(visible.slice(2),'right',state.page*2+2);
+    $('#album-spread').innerHTML = spreadHTML(list,state.page);
     $('#grid').replaceChildren();
   } else {
-    $('#grid').innerHTML = list.map(stampCard).join('');
+    $('#grid').innerHTML = list.map(s => stampCard(s)).join('');
     $('#album-spread').replaceChildren();
   }
   $('.pagination').hidden = state.view !== 'album';
-  $('#page-indicator').innerHTML = `${pad(state.page+1)} <i>/</i> ${pad(pages)}`;
-  $('#prev-page').disabled = state.page === 0; $('#next-page').disabled = state.page >= pages-1;
+  updatePager(); schedulePreload();
 }
 function updateDetailFavorite() {
   const liked = favorites.has(state.detailId);
@@ -122,64 +212,73 @@ function stepDetail(direction) {
   if (list[index+direction]) openDetail(list[index+direction].id);
 }
 async function changePage(direction) {
-  if (activeFlip || preparingPageFlip) return;
-  const target = state.page+direction;
-  if (target < 0 || target >= Math.ceil(filteredStamps().length/4)) return;
-  const oldSpread = $('#album-spread').cloneNode(true);
+  if (state.screen !== 'collection' || state.view !== 'album' || document.body.classList.contains('is-navigating') || activeFlip || preparingPageFlip) return;
+  const list = filteredStamps(), target = state.page+direction;
+  if (target < 0 || target >= Math.ceil(list.length/4)) return;
   const request = ++pageTurnRequest;
-  preparingPageFlip = true;
-  $('#prev-page').disabled = true; $('#next-page').disabled = true;
-  const previewImages = [...oldSpread.querySelectorAll('img')];
-  for (const stamp of filteredStamps().slice(target*4,target*4+4)) {
-    const image = new Image(); image.src = stamp.image; previewImages.push(image);
-  }
-  await Promise.all(previewImages.map(image => { image.loading = 'eager'; return image.decode().catch(() => {}); }));
+  preparingPageFlip = true; $('#album-shell').setAttribute('aria-busy','true'); updatePager();
+  const ready = Promise.all(list.slice(target*4,target*4+4).map(s => warmImage(s.image)));
+  // Adjacent pages normally decode in advance; a slow image cannot hold the controls indefinitely.
+  await Promise.race([ready,new Promise(resolve => setTimeout(resolve,220))]);
   if (request !== pageTurnRequest) return;
-  state.page = target; render();
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches || state.view !== 'album') return;
-  animatePageFlip(direction, oldSpread);
+  const oldSpread = $('#album-spread'), height = oldSpread.getBoundingClientRect().height;
+  const nextSpread = document.createElement('div');
+  nextSpread.id = 'album-spread'; nextSpread.className = 'album-spread'; nextSpread.setAttribute('aria-live','polite');
+  nextSpread.innerHTML = spreadHTML(list,target);
+  state.page = target; preparingPageFlip = false;
+  oldSpread.replaceWith(nextSpread);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    $('#album-shell').removeAttribute('aria-busy'); updatePager(); schedulePreload(); return;
+  }
+  nextSpread.style.height = height+'px';
+  animatePageFlip(direction,oldSpread,nextSpread);
 }
 function cancelPageFlip() {
   pageTurnRequest += 1; preparingPageFlip = false;
-  if (!activeFlip) return;
-  const flip = activeFlip; activeFlip = null;
-  flip.animation.cancel(); flip.scene.remove();
-  $('#album-shell').classList.remove('is-turning');
+  if (activeFlip) {
+    const flip = activeFlip; activeFlip = null;
+    flip.animation.cancel(); flip.scene.remove();
+  }
+  const shell = $('#album-shell');
+  shell.classList.remove('is-turning'); shell.removeAttribute('aria-busy');
+  $('#album-spread').style.height = '';
+  updatePager();
 }
-function animatePageFlip(direction, oldSpread) {
+function animatePageFlip(direction,oldSpread,nextSpread) {
   const mobile = matchMedia('(max-width: 650px)').matches;
   const scene = document.createElement('div');
   scene.className = `flip-scene ${direction > 0 ? 'turn-forward' : 'turn-backward'}${mobile ? ' mobile-turn' : ''}`;
-  scene.setAttribute('aria-hidden', 'true'); scene.inert = true;
+  scene.setAttribute('aria-hidden','true'); scene.inert = true;
   const sheet = document.createElement('div'); sheet.className = 'flip-sheet';
   const front = document.createElement('div'), back = document.createElement('div');
   front.className = 'flip-face flip-front'; back.className = 'flip-face flip-back';
-  const newSpread = $('#album-spread').cloneNode(true);
-  for (const clone of [oldSpread,newSpread]) {
-    clone.removeAttribute('id'); clone.removeAttribute('aria-live');
-    for (const image of clone.querySelectorAll('img')) image.loading = 'eager';
+  oldSpread.removeAttribute('id'); oldSpread.removeAttribute('aria-live');
+  if (mobile) {
+    front.append(oldSpread);
+    const copy = nextSpread.cloneNode(true); copy.removeAttribute('id'); copy.removeAttribute('aria-live'); back.append(copy);
+  } else {
+    const oldPages = [...oldSpread.children], newPages = [...nextSpread.children];
+    const staticPage = oldPages[direction > 0 ? 0 : 1]; staticPage.classList.add('flip-static');
+    scene.append(staticPage); front.append(oldPages[direction > 0 ? 1 : 0]);
+    back.append(newPages[direction > 0 ? 0 : 1].cloneNode(true));
   }
-  if (mobile) { front.append(oldSpread); back.append(newSpread); }
-  else {
-    const staticPage = oldSpread.children[direction > 0 ? 0 : 1].cloneNode(true);
-    staticPage.classList.add('flip-static');
-    front.append(oldSpread.children[direction > 0 ? 1 : 0]);
-    back.append(newSpread.children[direction > 0 ? 0 : 1]);
-    scene.append(staticPage);
-  }
+  for (const image of scene.querySelectorAll('img')) image.loading = 'eager';
   sheet.append(front,back); scene.append(sheet); $('#album-shell').append(scene);
   $('#album-shell').classList.add('is-turning');
-  $('#prev-page').disabled = true; $('#next-page').disabled = true;
   const degrees = direction > 0 ? -180 : 180;
-  const animation = sheet.animate([{transform:'rotateY(0deg)'},{transform:`rotateY(${degrees}deg)`}],{duration:mobile?650:900,easing:'cubic-bezier(.35,.06,.23,1)',fill:'forwards'});
-  const flip = {animation,scene}; activeFlip = flip;
+  const animation = sheet.animate([{transform:'rotateY(0deg)'},{transform:`rotateY(${degrees}deg)`}], {duration:mobile?460:560,delay:32,easing:'cubic-bezier(.32,.03,.25,1)',fill:'both'});
+  const flip = {animation,scene}; activeFlip = flip; updatePager();
   animation.finished.then(() => {
     if (activeFlip !== flip) return;
-    activeFlip = null; scene.remove(); $('#album-shell').classList.remove('is-turning');
-    $('#prev-page').disabled = state.page === 0;
-    $('#next-page').disabled = state.page >= Math.ceil(filteredStamps().length/4)-1;
+    activeFlip = null; scene.remove(); nextSpread.style.height = '';
+    $('#album-shell').classList.remove('is-turning'); $('#album-shell').removeAttribute('aria-busy');
+    updatePager(); schedulePreload();
   }).catch(() => {});
 }
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { cancelPageFlip(); schedulePreload(); },80);
+});
 function resetFilters() { state.category = 'all'; state.query = ''; state.page = 0; $('#search').value = ''; render(); }
 $$('.filter').forEach(b => b.addEventListener('click', () => { state.category = b.dataset.category; state.page = 0; render(); }));
 $('#search').value = state.query;
@@ -213,8 +312,8 @@ $('#zoom-image').addEventListener('click', () => {
 });
 document.addEventListener('keydown', e => {
   if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName) || $('#add-dialog').open || $('#zoom-dialog').open || $('#edit-dialog').open) return;
-  if (e.key === 'ArrowRight') { if ($('#detail-dialog').open) stepDetail(1); else if (state.view === 'album') changePage(1); }
-  if (e.key === 'ArrowLeft') { if ($('#detail-dialog').open) stepDetail(-1); else if (state.view === 'album') changePage(-1); }
+  if (e.key === 'ArrowRight') { if ($('#detail-dialog').open) stepDetail(1); else if (state.screen === 'collection' && state.view === 'album') changePage(1); }
+  if (e.key === 'ArrowLeft') { if ($('#detail-dialog').open) stepDetail(-1); else if (state.screen === 'collection' && state.view === 'album') changePage(-1); }
 });
 function openEdit() {
   const stamp = stamps.find(s => s.id === state.detailId);
@@ -335,7 +434,7 @@ $('#add-form').addEventListener('submit', async event => {
       stamps.push({...record,image:url,original:url,number:String(stamps.length+1).padStart(3,'0')});
     }
     state.category = 'all'; state.query = ''; $('#search').value = ''; state.view = 'album'; state.page = Math.floor(stamps.slice(0,firstIndex).filter(s => !s.deletedAt).length/4);
-    render(); $('#add-dialog').close(); $('#collection').scrollIntoView({behavior:'smooth'});
+    render(); $('#add-dialog').close(); showScreen('collection',{focus:false});
     notify(`${records.length} 枚新的记忆，已收入集邮册。`);
   } catch (error) { $('#upload-error').textContent = stampStorage.errorMessage(error); }
   finally { button.disabled = false; }
@@ -372,5 +471,6 @@ $('#removed-list').addEventListener('click', async event => {
     stamp.deletedAt = 0; render(); renderRemoved(); notify('这枚记忆已回到邮册。');
   } catch (error) { $('#restore-error').textContent = stampStorage.errorMessage(error); button.disabled=false; }
 });
+setScreen(pageFromLocation());
 render();
 const collectionReady = loadCustomStamps();
