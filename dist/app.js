@@ -9,6 +9,10 @@ let favorites = new Set(), toastTimer, activeFlip, editId;
 let preparingPageFlip = false, pageTurnRequest = 0;
 let routeSequence = 0, routeAnimations = [], preloadTimer, routeTarget;
 const imageCache = new Map();
+const readerMedia = matchMedia('(max-width: 650px)');
+const pageSize = () => readerMedia.matches ? 1 : 2;
+let currentPageSize = pageSize();
+let swipeStart, suppressStampClickUntil = 0;
 let uploadQueue = [], uploadGeneration = 0, preparingUploads = false;
 try { favorites = new Set(JSON.parse(localStorage.getItem('monet-favorites') || '[]')); } catch {}
 const collectionQueries = {'three-cities':'三城旅行', 'landscape-letters':'风景来信第二辑'};
@@ -120,16 +124,19 @@ function stampCard(s, eager = false) {
   return `<article class="stamp-card"><button class="stamp-open" data-open="${safe(s.id)}" aria-label="欣赏${safe(s.title)}邮票"><span class="stamp-mount"><img src="${safe(s.image)}" alt="${safe(s.title)} · 记忆邮票" width="800" height="1200" loading="${eager ? 'eager' : 'lazy'}" decoding="async"><span class="mount-strip" aria-hidden="true"></span></span><span class="stamp-caption"><span class="stamp-title">${safe(s.title)}</span><span class="stamp-id">N° ${safe(s.number)}</span></span><span class="stamp-place">${safe(s.place || '一处值得珍藏的风景')}</span><span class="stamp-tags">${(s.tags || []).slice(0,2).map(t => `<span># ${safe(t)}</span>`).join('')}</span></button><button class="favorite-button ${liked ? 'is-favorite' : ''}" data-favorite="${safe(s.id)}" aria-label="${liked ? '取消心选' : '加入心选'}：${safe(s.title)}" aria-pressed="${liked}">${icon('heart')}</button></article>`;
 }
 function albumPage(items, side, pageNumber) {
-  const category = ['all','favorites'].includes(state.category) ? '风景来信' : state.category;
+  const category = state.query === '三城旅行' ? '三城旅行' : state.query === '风景来信第二辑' ? '风景来信 · 第二辑' : ['all','favorites'].includes(state.category) ? '风景来信' : state.category;
   return `<div class="album-page" data-side="${side}"><div class="page-heading"><span>${side === 'left' ? 'MEMORY IMPRESSIONS' : 'PLACES TO REMEMBER'}</span><span class="page-heading-cn">${category} · ${pad(pageNumber)}</span></div><div class="page-stamps">${items.length ? items.map(s => stampCard(s, true)).join('') : '<div class="blank-page"><span>✳</span><p>下一枚风景，<br>正在路上。</p><small>ROOM FOR ANOTHER MEMORY</small></div>'}</div><div class="page-footer"><span>${items.length ? '藏品 '+items.map(s => s.number).join(' · ') : '留一页，给下一次抵达'}</span><b>— ${pad(pageNumber)} —</b><span>MEMORY POST</span></div></div>`;
 }
 function spreadHTML(list, page) {
-  const visible = list.slice(page*4,page*4+4);
-  return albumPage(visible.slice(0,2),'left',page*2+1) + albumPage(visible.slice(2),'right',page*2+2);
+  const size = pageSize(), start = page*size, visible = list.slice(start,start+size);
+  if (size === 1) return albumPage(visible,'single',start+1);
+  return albumPage(visible.slice(0,1),'left',start+1) + albumPage(visible.slice(1),'right',start+2);
 }
 function updatePager() {
-  const pages = Math.max(1,Math.ceil(filteredStamps().length/4));
-  $('#page-indicator').innerHTML = `${pad(state.page+1)} <i>/</i> ${pad(pages)}`;
+  const total = filteredStamps().length, size = pageSize(), pages = Math.max(1,Math.ceil(total/size));
+  const first = state.page*size+1, last = Math.min(total,first+size-1);
+  $('#page-indicator').innerHTML = `${pad(first)}${last > first ? '–'+pad(last) : ''} <i>/</i> ${pad(total)}`;
+  $('#page-indicator').setAttribute('aria-label',`当前第 ${first}${last > first ? ' 至 '+last : ''} 枚，共 ${total} 枚`);
   const busy = !!activeFlip || preparingPageFlip;
   $('#prev-page').disabled = busy || state.page === 0;
   $('#next-page').disabled = busy || state.page >= pages-1;
@@ -144,8 +151,8 @@ function schedulePreload() {
   clearTimeout(preloadTimer);
   preloadTimer = setTimeout(() => {
     if (state.view !== 'album') return;
-    const list = filteredStamps();
-    const nearby = state.screen === 'home' ? list.slice(state.page*4,state.page*4+8) : [...list.slice(Math.max(0,state.page-1)*4,state.page*4),...list.slice((state.page+1)*4,(state.page+2)*4)];
+    const list = filteredStamps(), size = pageSize();
+    const nearby = state.screen === 'home' ? list.slice(state.page*size,(state.page+2)*size) : [...list.slice(Math.max(0,state.page-1)*size,state.page*size),...list.slice((state.page+1)*size,(state.page+2)*size)];
     const keep = new Set(nearby.map(s => s.image));
     for (const url of imageCache.keys()) if (!keep.has(url)) imageCache.delete(url);
     nearby.forEach(s => warmImage(s.image));
@@ -153,11 +160,17 @@ function schedulePreload() {
 }
 function render() {
   cancelPageFlip();
-  const list = filteredStamps(), pages = Math.max(1, Math.ceil(list.length / 4));
+  const list = filteredStamps(), pages = Math.max(1, Math.ceil(list.length / pageSize()));
   state.page = Math.min(state.page, pages - 1);
   const count = stamps.filter(s => !s.deletedAt).length;
   $('#hero-count').textContent = count; $('#total-count').textContent = count;
   $('#removed-count').textContent = stamps.filter(s => s.deletedAt).length;
+  const filtered = state.category !== 'all' || !!state.query;
+  const label = state.query ? `“${state.query}”` : state.category === 'favorites' ? '我的心选' : state.category === 'all' ? '全部藏品' : state.category;
+  $('#reading-summary').textContent = `${label} · ${list.length} 枚`;
+  $('#clear-search').hidden = !filtered;
+  $('#toggle-filters').classList.toggle('has-filter',filtered);
+  if ($('#manage-dialog').open) renderManage();
   $$('.filter').forEach(b => { const active = b.dataset.category === state.category; b.classList.toggle('active', active); b.setAttribute('aria-pressed', active); });
   ['album','grid'].forEach(v => { $('#'+v+'-view').classList.toggle('selected',state.view === v); $('#'+v+'-view').setAttribute('aria-pressed',state.view === v); });
   $('#album-shell').hidden = state.view !== 'album' || !list.length;
@@ -195,7 +208,7 @@ function openDetail(id) {
   $('#detail-category').textContent = s.category;
   $('#detail-number').textContent = 'MEMORY POST / COLLECTION N° '+s.number;
   $('#detail-place').textContent = s.place || '一处值得珍藏的风景';
-  $('#detail-description').textContent = s.description || '还没有描述，点下方编辑，为这份记忆添一笔。';
+  $('#detail-description').textContent = s.description || '这一处风景，值得慢慢回望。';
   $('#detail-tags').innerHTML = (s.tags || []).map(t => `<button type="button" data-tag="${safe(t)}" aria-label="按标签筛选：${safe(t)}"># ${safe(t)}</button>`).join('');
   $('#detail-size').textContent = `${s.width || 1024} × ${s.height || 1536} px`;
   $('#detail-series').textContent = s.series || (s.custom ? '我的新收藏' : '记忆邮票 · 风景来信');
@@ -204,7 +217,7 @@ function openDetail(id) {
   $('#detail-position').textContent = `${pad(index+1)} / ${pad(sequence.length)}`;
   $('#detail-prev').disabled = index === 0; $('#detail-next').disabled = index === sequence.length-1;
   updateDetailFavorite();
-  if (!$('#detail-dialog').open) $('#detail-dialog').showModal();
+  if (!$('#detail-dialog').open) { $('.detail-manage').open = false; $('#detail-dialog').showModal(); }
   $('#detail-dialog').scrollTop = 0;
 }
 function stepDetail(direction) {
@@ -214,10 +227,10 @@ function stepDetail(direction) {
 async function changePage(direction) {
   if (state.screen !== 'collection' || state.view !== 'album' || document.body.classList.contains('is-navigating') || activeFlip || preparingPageFlip) return;
   const list = filteredStamps(), target = state.page+direction;
-  if (target < 0 || target >= Math.ceil(list.length/4)) return;
+  if (target < 0 || target >= Math.ceil(list.length/pageSize())) return;
   const request = ++pageTurnRequest;
   preparingPageFlip = true; $('#album-shell').setAttribute('aria-busy','true'); updatePager();
-  const ready = Promise.all(list.slice(target*4,target*4+4).map(s => warmImage(s.image)));
+  const ready = Promise.all(list.slice(target*pageSize(),(target+1)*pageSize()).map(s => warmImage(s.image)));
   // Adjacent pages normally decode in advance; a slow image cannot hold the controls indefinitely.
   await Promise.race([ready,new Promise(resolve => setTimeout(resolve,220))]);
   if (request !== pageTurnRequest) return;
@@ -245,7 +258,7 @@ function cancelPageFlip() {
   updatePager();
 }
 function animatePageFlip(direction,oldSpread,nextSpread) {
-  const mobile = matchMedia('(max-width: 650px)').matches;
+  const mobile = readerMedia.matches;
   const scene = document.createElement('div');
   scene.className = `flip-scene ${direction > 0 ? 'turn-forward' : 'turn-backward'}${mobile ? ' mobile-turn' : ''}`;
   scene.setAttribute('aria-hidden','true'); scene.inert = true;
@@ -254,8 +267,10 @@ function animatePageFlip(direction,oldSpread,nextSpread) {
   front.className = 'flip-face flip-front'; back.className = 'flip-face flip-back';
   oldSpread.removeAttribute('id'); oldSpread.removeAttribute('aria-live');
   if (mobile) {
-    front.append(oldSpread);
-    const copy = nextSpread.cloneNode(true); copy.removeAttribute('id'); copy.removeAttribute('aria-live'); back.append(copy);
+    front.append(oldSpread.firstElementChild);
+    // The underside stays quiet; the next artwork is already visible underneath.
+    const underside = document.createElement('div'); underside.className = 'paper-underside';
+    underside.innerHTML = '<span>✳</span><small>记忆邮票</small>'; back.append(underside);
   } else {
     const oldPages = [...oldSpread.children], newPages = [...nextSpread.children];
     const staticPage = oldPages[direction > 0 ? 0 : 1]; staticPage.classList.add('flip-static');
@@ -265,8 +280,9 @@ function animatePageFlip(direction,oldSpread,nextSpread) {
   for (const image of scene.querySelectorAll('img')) image.loading = 'eager';
   sheet.append(front,back); scene.append(sheet); $('#album-shell').append(scene);
   $('#album-shell').classList.add('is-turning');
-  const degrees = direction > 0 ? -180 : 180;
-  const animation = sheet.animate([{transform:'rotateY(0deg)'},{transform:`rotateY(${degrees}deg)`}], {duration:mobile?460:560,delay:32,easing:'cubic-bezier(.32,.03,.25,1)',fill:'both'});
+  const degrees = direction > 0 ? (mobile ? -105 : -180) : (mobile ? 105 : 180);
+  const frames = mobile ? [{transform:'rotateY(0deg)',opacity:1},{transform:`rotateY(${degrees*.8}deg)`,opacity:1,offset:.78},{transform:`rotateY(${degrees}deg)`,opacity:0}] : [{transform:'rotateY(0deg)'},{transform:`rotateY(${degrees}deg)`}];
+  const animation = sheet.animate(frames, {duration:mobile?380:500,delay:16,easing:'cubic-bezier(.3,.08,.25,1)',fill:'both'});
   const flip = {animation,scene}; activeFlip = flip; updatePager();
   animation.finished.then(() => {
     if (activeFlip !== flip) return;
@@ -277,7 +293,12 @@ function animatePageFlip(direction,oldSpread,nextSpread) {
 }
 let resizeTimer;
 window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { cancelPageFlip(); schedulePreload(); },80);
+  clearTimeout(resizeTimer); resizeTimer = setTimeout(() => {
+    const size = pageSize();
+    if (size !== currentPageSize) {
+      state.page = Math.floor(state.page*currentPageSize/size); currentPageSize = size; render();
+    } else { cancelPageFlip(); schedulePreload(); }
+  },80);
 });
 function resetFilters() { state.category = 'all'; state.query = ''; state.page = 0; $('#search').value = ''; render(); }
 $$('.filter').forEach(b => b.addEventListener('click', () => { state.category = b.dataset.category; state.page = 0; render(); }));
@@ -287,6 +308,12 @@ $('#show-new-stamps').addEventListener('click', () => showSeries('风景来信�
 $('#show-travel-stamps').addEventListener('click', () => showSeries('三城旅行'));
 $('#search').addEventListener('input', e => { state.query = e.target.value; state.page = 0; render(); });
 $('#reset-filters').addEventListener('click',resetFilters);
+$('#clear-search').addEventListener('click',resetFilters);
+$('#toggle-filters').addEventListener('click',() => {
+  const panel = $('#filter-panel'), button = $('#toggle-filters');
+  panel.hidden = !panel.hidden; button.setAttribute('aria-expanded',!panel.hidden);
+  button.querySelector('span').textContent = panel.hidden ? '＋' : '−';
+});
 $('#album-view').addEventListener('click', () => { state.view = 'album'; render(); });
 $('#grid-view').addEventListener('click', () => { state.view = 'grid'; render(); });
 $('#prev-page').addEventListener('click', () => changePage(-1));
@@ -295,6 +322,7 @@ $('#detail-prev').addEventListener('click', () => stepDetail(-1));
 $('#detail-next').addEventListener('click', () => stepDetail(1));
 $('#detail-favorite').addEventListener('click', () => toggleFavorite(state.detailId));
 $('.collection').addEventListener('click', e => {
+  if (Date.now() < suppressStampClickUntil) return;
   const open = e.target.closest('[data-open]'), favorite = e.target.closest('[data-favorite]');
   if (open) openDetail(open.dataset.open); if (favorite) toggleFavorite(favorite.dataset.favorite);
 });
@@ -311,7 +339,7 @@ $('#zoom-image').addEventListener('click', () => {
   $('#zoom-art').src = s.original; $('#zoom-art').alt = s.title+'邮票完整原图'; $('#zoom-dialog').showModal();
 });
 document.addEventListener('keydown', e => {
-  if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName) || $('#add-dialog').open || $('#zoom-dialog').open || $('#edit-dialog').open) return;
+  if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName) || $$('dialog[open]').some(dialog => dialog.id !== 'detail-dialog')) return;
   if (e.key === 'ArrowRight') { if ($('#detail-dialog').open) stepDetail(1); else if (state.screen === 'collection' && state.view === 'album') changePage(1); }
   if (e.key === 'ArrowLeft') { if ($('#detail-dialog').open) stepDetail(-1); else if (state.screen === 'collection' && state.view === 'album') changePage(-1); }
 });
@@ -368,6 +396,7 @@ function resetUpload() {
   $('#save-stamp').disabled = false; renderUploadQueue();
 }
 $$('[data-add]').forEach(button => button.addEventListener('click', () => {
+  $('#manage-dialog').close();
   resetUpload();
   if (['湖光园林','山川旷野','人文建筑'].includes(state.category)) $('#stamp-category').value = state.category;
   $('#add-dialog').showModal();
@@ -433,7 +462,7 @@ $('#add-form').addEventListener('submit', async event => {
       const url = URL.createObjectURL(record.file);
       stamps.push({...record,image:url,original:url,number:String(stamps.length+1).padStart(3,'0')});
     }
-    state.category = 'all'; state.query = ''; $('#search').value = ''; state.view = 'album'; state.page = Math.floor(stamps.slice(0,firstIndex).filter(s => !s.deletedAt).length/4);
+    state.category = 'all'; state.query = ''; $('#search').value = ''; state.view = 'album'; state.page = Math.floor(stamps.slice(0,firstIndex).filter(s => !s.deletedAt).length/pageSize());
     render(); $('#add-dialog').close(); showScreen('collection',{focus:false});
     notify(`${records.length} 枚新的记忆，已收入集邮册。`);
   } catch (error) { $('#upload-error').textContent = stampStorage.errorMessage(error); }
@@ -461,7 +490,7 @@ $('#confirm-delete').addEventListener('click', async () => {
   } catch (error) { $('#delete-error').textContent = stampStorage.errorMessage(error); }
   finally { button.disabled = false; }
 });
-$('#show-removed').addEventListener('click', async () => { await collectionReady; renderRemoved(); $('#restore-error').textContent=''; $('#removed-dialog').showModal(); });
+$('#show-removed').addEventListener('click', async () => { await collectionReady; $('#manage-dialog').close(); renderRemoved(); $('#restore-error').textContent=''; $('#removed-dialog').showModal(); });
 $('#removed-list').addEventListener('click', async event => {
   const button = event.target.closest('[data-restore]'); if (!button) return;
   const stamp = stamps.find(s => s.id === button.dataset.restore); if (!stamp) return;
@@ -470,6 +499,29 @@ $('#removed-list').addEventListener('click', async event => {
     await stampStorage.edit({id:stamp.id,deletedAt:0,updatedAt:Date.now()});
     stamp.deletedAt = 0; render(); renderRemoved(); notify('这枚记忆已回到邮册。');
   } catch (error) { $('#restore-error').textContent = stampStorage.errorMessage(error); button.disabled=false; }
+});
+function renderManage() {
+  const list = stamps.filter(s => !s.deletedAt);
+  $('#manage-count').textContent = list.length;
+  $('#manage-list').innerHTML = list.length ? list.map(s => `<article class="manage-item"><img src="${safe(s.image)}" alt="" loading="lazy"><div><strong>${safe(s.title)}</strong><span>${safe(s.place || '我的记忆邮票')}</span></div><button type="button" data-manage-stamp="${safe(s.id)}" aria-label="整理${safe(s.title)}">整理 ${icon('edit')}</button></article>`).join('') : '<p class="removed-empty">从一枚新邮票，开启这一册记忆。</p>';
+}
+$$('[data-manage]').forEach(button => button.addEventListener('click',() => {
+  renderManage(); $('#manage-dialog').showModal();
+}));
+$('#manage-list').addEventListener('click',event => {
+  const button = event.target.closest('[data-manage-stamp]'); if (!button) return;
+  $('#manage-dialog').close(); openDetail(button.dataset.manageStamp); $('.detail-manage').open = true;
+});
+$('#album-shell').addEventListener('pointerdown',event => {
+  if (readerMedia.matches && event.pointerType === 'touch' && event.isPrimary) swipeStart = {x:event.clientX,y:event.clientY};
+});
+$('#album-shell').addEventListener('pointercancel',() => { swipeStart = null; });
+$('#album-shell').addEventListener('pointerup',event => {
+  if (!swipeStart) return;
+  const dx = event.clientX-swipeStart.x, dy = event.clientY-swipeStart.y; swipeStart = null;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.5) {
+    suppressStampClickUntil = Date.now()+450; changePage(dx < 0 ? 1 : -1);
+  }
 });
 setScreen(pageFromLocation());
 render();

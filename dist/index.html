@@ -7,10 +7,10 @@
   <meta name="description" content="记忆邮票，一册收藏光影与远方的私人邮票集。在方寸之间，重温每一次抵达。">
   <title>记忆邮票 — 方寸之间，皆是远方</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=20261106-2">
-  <script src="collection.js?v=20261106-2" defer></script>
-  <script src="storage.js?v=20261106-2" defer></script>
-  <script src="app.js?v=20261106-2" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261106-3">
+  <script src="collection.js?v=20261106-3" defer></script>
+  <script src="storage.js?v=20261106-3" defer></script>
+  <script src="app.js?v=20261106-3" defer></script>
 </head>
 <body data-page="home">
   <svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
@@ -32,7 +32,7 @@
   <header class="site-header wrap">
     <a class="brand" href="#home" data-route="home" aria-label="记忆邮票首页"><span class="brand-icon"><svg><use href="#i-stamp"/></svg></span><span>记忆邮票<small>MEMORY POST</small></span></a>
     <nav aria-label="主导航"><a class="active" href="#home" data-route="home" aria-current="page">首页</a><a href="#collection" data-route="collection">我的集邮册</a></nav>
-    <button class="add-button" data-add><svg><use href="#i-plus"/></svg><span>添加新邮票</span></button>
+    <button class="add-button" data-manage aria-haspopup="dialog"><svg><use href="#i-edit"/></svg><span>管理邮册</span></button>
   </header>
 
   <main>
@@ -57,13 +57,15 @@
 
     <section id="collection" class="collection wrap screen" aria-labelledby="collection-title" hidden>
       <div class="collection-return"><a href="#home" data-route="home" class="back-home"><svg><use href="#i-arrow"/></svg>返回首页</a><span>每一页，都是一次重访。</span></div>
-      <div class="section-heading"><div><div class="eyebrow">THE COLLECTION <span class="line"></span> VOL. 01</div><h2 id="collection-title" tabindex="-1">我的集邮册<span>把喜欢的风景，一枚枚安放。</span></h2></div><div class="collection-actions"><button class="collection-add" data-add><svg><use href="#i-plus"/></svg>添加新邮票</button><div class="view-toggle" role="group" aria-label="浏览方式"><button id="album-view" class="selected" aria-pressed="true"><svg><use href="#i-book"/></svg>集邮册</button><button id="grid-view" aria-pressed="false"><svg><use href="#i-grid"/></svg>全览</button></div></div></div>
+      <div class="section-heading"><div><h2 id="collection-title" tabindex="-1">我的集邮册</h2></div><div class="view-toggle" role="group" aria-label="浏览方式"><button id="album-view" class="selected" aria-pressed="true"><svg><use href="#i-book"/></svg>阅读</button><button id="grid-view" aria-pressed="false"><svg><use href="#i-grid"/></svg>全览</button></div></div>
       <div class="collection-toolbar">
-        <div class="filters" role="group" aria-label="藏品分类"><button class="filter active" data-category="all" aria-pressed="true">全部藏品 <span id="total-count">25</span></button><button class="filter" data-category="山川旷野" aria-pressed="false">山川旷野</button><button class="filter" data-category="湖光园林" aria-pressed="false">湖光园林</button><button class="filter" data-category="人文建筑" aria-pressed="false">人文建筑</button><button class="filter favorite-filter" data-category="favorites" aria-pressed="false"><svg><use href="#i-heart"/></svg>心选</button></div>
-        <label class="search"><svg><use href="#i-search"/></svg><input id="search" type="search" placeholder="寻找一处风景…" aria-label="搜索邮票名称、地点或标签"></label>
+        <div class="reader-context"><span id="reading-summary" role="status">全部藏品 · 25 枚</span><button id="clear-search" type="button" hidden>清除筛选</button></div>
+        <div class="reader-tools"><label class="search"><svg><use href="#i-search"/></svg><input id="search" type="search" placeholder="寻找一处风景" aria-label="搜索邮票名称、地点或标签"></label><button id="toggle-filters" class="filter-toggle" aria-controls="filter-panel" aria-expanded="false">筛选 <span aria-hidden="true">＋</span></button></div>
       </div>
-
-      <div class="collection-storage"><div><button type="button" id="show-new-stamps" class="new-stamps-link">新入册 · 风景来信 10 枚 ↗</button> <button type="button" id="show-travel-stamps" class="new-stamps-link">三城旅行 3 枚 ↗</button><p id="storage-status" role="status">正在连接邮册存储…</p></div><button id="show-removed" class="text-button">已移除 <span id="removed-count">0</span></button></div>
+      <div id="filter-panel" class="filter-panel" hidden>
+        <div class="filters" role="group" aria-label="藏品分类"><button class="filter active" data-category="all" aria-pressed="true">全部藏品 <span id="total-count">25</span></button><button class="filter" data-category="山川旷野" aria-pressed="false">山川旷野</button><button class="filter" data-category="湖光园林" aria-pressed="false">湖光园林</button><button class="filter" data-category="人文建筑" aria-pressed="false">人文建筑</button><button class="filter favorite-filter" data-category="favorites" aria-pressed="false"><svg><use href="#i-heart"/></svg>心选</button></div>
+        <div class="series-filters"><span>按系列</span><button type="button" id="show-new-stamps" class="new-stamps-link">风景来信 · 第二辑 ↗</button><button type="button" id="show-travel-stamps" class="new-stamps-link">三城旅行 ↗</button></div>
+      </div>
       <div class="album-shell" id="album-shell">
         <div class="album-spread" id="album-spread" aria-live="polite"></div>
         <div class="book-spine" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -71,14 +73,23 @@
       </div>
       <div id="grid" class="stamp-grid" hidden aria-live="polite"></div>
       <div id="empty" class="empty-state" hidden><svg><use href="#i-stamp"/></svg><h3>这一页，等一枚心动的风景。</h3><p id="empty-text">试试其他分类，或换一个关键词。</p><button id="reset-filters" class="text-button">查看全部藏品 <span>↗</span></button></div>
-      <div class="album-controls" id="album-controls"><span class="album-hint"><svg><use href="#i-expand"/></svg> 轻点邮票，细赏每一处风景</span><div class="pagination"><button class="round-button prev" id="prev-page" aria-label="上一页"><svg><use href="#i-arrow"/></svg></button><span id="page-indicator">01 <i>/</i> 03</span><button class="round-button" id="next-page" aria-label="下一页"><svg><use href="#i-arrow"/></svg></button></div><span class="album-edition">MEMORY IMPRESSIONS · 私人珍藏</span></div>
+      <div class="album-controls" id="album-controls"><span class="album-hint"><svg><use href="#i-expand"/></svg> 轻点邮票，细赏每一处风景</span><div class="pagination"><button class="round-button prev" id="prev-page" aria-label="上一页"><svg><use href="#i-arrow"/></svg></button><span id="page-indicator" role="status" aria-live="polite">01–02 <i>/</i> 25</span><button class="round-button" id="next-page" aria-label="下一页"><svg><use href="#i-arrow"/></svg></button></div><span class="album-edition">MEMORY IMPRESSIONS · 私人珍藏</span></div>
     </section>
 
   </main>
 
   <footer class="wrap"><a href="#home" data-route="home" class="footer-brand"><svg><use href="#i-stamp"/></svg>记忆邮票</a><span>收藏风景，也收藏看风景时的自己。</span><span class="footer-end">MADE OF PLACES & MEMORIES <span>✳</span></span></footer>
 
-  <dialog id="detail-dialog" class="detail-dialog" aria-labelledby="detail-title"><button class="dialog-close icon-button" aria-label="关闭详情"><svg><use href="#i-close"/></svg></button><div class="detail-layout"><div class="detail-art"><img id="detail-image" alt=""><button id="zoom-image" class="zoom-button"><svg><use href="#i-expand"/></svg><span>放大欣赏</span></button></div><div class="detail-info"><div class="eyebrow" id="detail-number"></div><span class="detail-category" id="detail-category"></span><h2 id="detail-title"></h2><p class="detail-english" id="detail-english"></p><div class="detail-location"><svg><use href="#i-pin"/></svg><span id="detail-place"></span></div><p class="detail-description" id="detail-description"></p><div class="detail-tags" id="detail-tags" aria-label="邮票标签"></div><button class="edit-stamp-button" id="edit-stamp"><svg><use href="#i-edit"/></svg>编辑描述与标签</button><button class="delete-stamp-button" id="delete-stamp" type="button">从邮册中删除</button><div class="detail-rule"></div><div class="detail-meta"><span>收藏系列</span><strong id="detail-series">记忆邮票 · 风景来信</strong></div><div class="detail-meta"><span>图像尺寸</span><strong id="detail-size">1024 × 1536 px</strong></div><div class="detail-actions"><button id="detail-favorite" class="primary-button"><svg><use href="#i-heart"/></svg><span>加入心选</span></button><a id="download-image" class="download-link" download><svg><use href="#i-download"/></svg>保存原图</a></div><div class="detail-browse"><button id="detail-prev" class="text-button">← 上一枚</button><span id="detail-position"></span><button id="detail-next" class="text-button">下一枚 →</button></div></div></div></dialog>
+  <dialog id="manage-dialog" class="add-dialog manage-dialog" aria-labelledby="manage-title">
+    <button class="dialog-close icon-button" aria-label="关闭管理邮册"><svg><use href="#i-close"/></svg></button>
+    <div class="eyebrow">YOUR MEMORY ARCHIVE</div><h2 id="manage-title">整理你的收藏。</h2>
+    <p class="add-intro">为新的风景留一页，也为旧日的记忆添一笔。</p>
+    <button class="primary-button manage-add" data-add><svg><use href="#i-plus"/></svg>添加新邮票</button>
+    <div class="manage-list-heading"><h3>现有藏品 <span id="manage-count">25</span></h3><button id="show-removed" class="text-button">已移除 <span id="removed-count">0</span></button></div>
+    <div id="manage-list" class="manage-list"></div>
+    <p id="storage-status" class="manage-storage" role="status">正在连接邮册存储…</p>
+  </dialog>
+  <dialog id="detail-dialog" class="detail-dialog" aria-labelledby="detail-title"><button class="dialog-close icon-button" aria-label="关闭详情"><svg><use href="#i-close"/></svg></button><div class="detail-layout"><div class="detail-art"><img id="detail-image" alt=""><button id="zoom-image" class="zoom-button"><svg><use href="#i-expand"/></svg><span>放大欣赏</span></button></div><div class="detail-info"><div class="eyebrow" id="detail-number"></div><span class="detail-category" id="detail-category"></span><h2 id="detail-title"></h2><p class="detail-english" id="detail-english"></p><div class="detail-location"><svg><use href="#i-pin"/></svg><span id="detail-place"></span></div><p class="detail-description" id="detail-description"></p><div class="detail-tags" id="detail-tags" aria-label="邮票标签"></div><details class="detail-manage"><summary>管理这枚邮票</summary><div><button class="edit-stamp-button" id="edit-stamp"><svg><use href="#i-edit"/></svg>编辑描述与标签</button><button class="delete-stamp-button" id="delete-stamp" type="button">从邮册中删除</button></div></details><div class="detail-rule"></div><div class="detail-meta"><span>收藏系列</span><strong id="detail-series">记忆邮票 · 风景来信</strong></div><div class="detail-meta"><span>图像尺寸</span><strong id="detail-size">1024 × 1536 px</strong></div><div class="detail-actions"><button id="detail-favorite" class="primary-button"><svg><use href="#i-heart"/></svg><span>加入心选</span></button><a id="download-image" class="download-link" download><svg><use href="#i-download"/></svg>保存原图</a></div><div class="detail-browse"><button id="detail-prev" class="text-button">← 上一枚</button><span id="detail-position"></span><button id="detail-next" class="text-button">下一枚 →</button></div></div></div></dialog>
   <dialog id="zoom-dialog" class="zoom-dialog" aria-label="邮票原图"><button class="dialog-close icon-button" aria-label="关闭大图"><svg><use href="#i-close"/></svg></button><img id="zoom-art" alt=""><p>轻点空白处或按 Esc 返回</p></dialog>
   <dialog id="add-dialog" class="add-dialog" aria-labelledby="add-title">
     <button class="dialog-close icon-button" aria-label="关闭添加窗口"><svg><use href="#i-close"/></svg></button>
