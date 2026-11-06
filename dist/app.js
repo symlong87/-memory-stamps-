@@ -9,7 +9,8 @@ let favorites = new Set(), toastTimer, activeFlip, editId;
 let preparingPageFlip = false, pageTurnRequest = 0;
 let uploadQueue = [], uploadGeneration = 0, preparingUploads = false;
 try { favorites = new Set(JSON.parse(localStorage.getItem('monet-favorites') || '[]')); } catch {}
-const state = { category: 'all', query: new URLSearchParams(location.search).get('collection') === 'three-cities' ? '三城旅行' : '', page: 0, view: 'album', detailId: null };
+const collectionQueries = {'three-cities':'三城旅行', 'landscape-letters':'风景来信第二辑'};
+const state = { category: 'all', query: collectionQueries[new URLSearchParams(location.search).get('collection')] || '', page: 0, view: 'album', detailId: null };
 const normalizeTags = value => [...new Set((Array.isArray(value) ? value : String(value).split(/[,，、;；\s#]+/)).map(t => String(t).trim().replace(/^#+/, '').slice(0, 20)).filter(Boolean))].slice(0, 12);
 const newId = () => typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
 
@@ -182,7 +183,9 @@ function animatePageFlip(direction, oldSpread) {
 function resetFilters() { state.category = 'all'; state.query = ''; state.page = 0; $('#search').value = ''; render(); }
 $$('.filter').forEach(b => b.addEventListener('click', () => { state.category = b.dataset.category; state.page = 0; render(); }));
 $('#search').value = state.query;
-$('#show-new-stamps').addEventListener('click', () => { state.category='all'; state.query='三城旅行'; state.page=0; $('#search').value=state.query; render(); });
+function showSeries(query) { state.category='all'; state.query=query; state.page=0; $('#search').value=query; render(); }
+$('#show-new-stamps').addEventListener('click', () => showSeries('风景来信第二辑'));
+$('#show-travel-stamps').addEventListener('click', () => showSeries('三城旅行'));
 $('#search').addEventListener('input', e => { state.query = e.target.value; state.page = 0; render(); });
 $('#reset-filters').addEventListener('click',resetFilters);
 $('#album-view').addEventListener('click', () => { state.view = 'album'; render(); });

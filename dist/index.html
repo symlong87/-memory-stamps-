@@ -7,10 +7,10 @@
   <meta name="description" content="记忆邮票，一册收藏光影与远方的私人邮票集。在方寸之间，重温每一次抵达。">
   <title>记忆邮票 — 方寸之间，皆是远方</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=20261021-3">
-  <script src="collection.js?v=20261021-3" defer></script>
-  <script src="storage.js?v=20261021-3" defer></script>
-  <script src="app.js?v=20261021-3" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261105-1">
+  <script src="collection.js?v=20261105-1" defer></script>
+  <script src="storage.js?v=20261105-1" defer></script>
+  <script src="app.js?v=20261105-1" defer></script>
 </head>
 <body>
   <svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
@@ -41,7 +41,7 @@
         <div class="eyebrow"><span></span> A PERSONAL STAMP COLLECTION</div>
         <h1 id="hero-title">方寸之间，<br>皆是<span class="faraway">远方<svg viewBox="0 0 210 15" aria-hidden="true"><path d="M2 10C60 1 143 0 207 8M12 14C86 6 141 6 185 11"/></svg></span>。</h1>
         <p>把途中的光影，寄给时光。<br>在这一册邮票里，慢慢收藏世界的模样。</p>
-        <div class="hero-actions"><a class="primary-button" href="#collection">翻开我的集邮册<svg><use href="#i-arrow"/></svg></a><span class="hero-count"><b id="hero-count">15</b> 枚风景 · 一路珍藏</span></div>
+        <div class="hero-actions"><a class="primary-button" href="#collection">翻开我的集邮册<svg><use href="#i-arrow"/></svg></a><span class="hero-count"><b id="hero-count">25</b> 枚风景 · 一路珍藏</span></div>
         <div class="hero-note"><span class="tiny-star">✳</span> 每一次抵达，都值得一枚纪念。</div>
       </div>
       <div class="hero-art" aria-label="记忆邮票邮票作品预览">
@@ -58,11 +58,11 @@
     <section id="collection" class="collection wrap" aria-labelledby="collection-title">
       <div class="section-heading"><div><div class="eyebrow">THE COLLECTION <span class="line"></span> VOL. 01</div><h2 id="collection-title">我的集邮册<span>把喜欢的风景，一枚枚安放。</span></h2></div><div class="collection-actions"><button class="collection-add" data-add><svg><use href="#i-plus"/></svg>添加新邮票</button><div class="view-toggle" role="group" aria-label="浏览方式"><button id="album-view" class="selected" aria-pressed="true"><svg><use href="#i-book"/></svg>集邮册</button><button id="grid-view" aria-pressed="false"><svg><use href="#i-grid"/></svg>全览</button></div></div></div>
       <div class="collection-toolbar">
-        <div class="filters" role="group" aria-label="藏品分类"><button class="filter active" data-category="all" aria-pressed="true">全部藏品 <span id="total-count">15</span></button><button class="filter" data-category="山川旷野" aria-pressed="false">山川旷野</button><button class="filter" data-category="湖光园林" aria-pressed="false">湖光园林</button><button class="filter" data-category="人文建筑" aria-pressed="false">人文建筑</button><button class="filter favorite-filter" data-category="favorites" aria-pressed="false"><svg><use href="#i-heart"/></svg>心选</button></div>
+        <div class="filters" role="group" aria-label="藏品分类"><button class="filter active" data-category="all" aria-pressed="true">全部藏品 <span id="total-count">25</span></button><button class="filter" data-category="山川旷野" aria-pressed="false">山川旷野</button><button class="filter" data-category="湖光园林" aria-pressed="false">湖光园林</button><button class="filter" data-category="人文建筑" aria-pressed="false">人文建筑</button><button class="filter favorite-filter" data-category="favorites" aria-pressed="false"><svg><use href="#i-heart"/></svg>心选</button></div>
         <label class="search"><svg><use href="#i-search"/></svg><input id="search" type="search" placeholder="寻找一处风景…" aria-label="搜索邮票名称、地点或标签"></label>
       </div>
 
-      <div class="collection-storage"><div><button type="button" id="show-new-stamps" class="new-stamps-link">新入册 · 三城旅行 3 枚 ↗</button><p id="storage-status" role="status">正在连接邮册存储…</p></div><button id="show-removed" class="text-button">已移除 <span id="removed-count">0</span></button></div>
+      <div class="collection-storage"><div><button type="button" id="show-new-stamps" class="new-stamps-link">新入册 · 风景来信 10 枚 ↗</button> <button type="button" id="show-travel-stamps" class="new-stamps-link">三城旅行 3 枚 ↗</button><p id="storage-status" role="status">正在连接邮册存储…</p></div><button id="show-removed" class="text-button">已移除 <span id="removed-count">0</span></button></div>
       <div class="album-shell" id="album-shell">
         <div class="album-spread" id="album-spread" aria-live="polite"></div>
         <div class="book-spine" aria-hidden="true"><i></i><i></i><i></i></div>
