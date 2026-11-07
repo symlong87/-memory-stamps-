@@ -7,10 +7,10 @@
   <meta name="description" content="记忆邮票，一册收藏光影与远方的私人邮票集。在方寸之间，重温每一次抵达。">
   <title>记忆邮票 — 方寸之间，皆是远方</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=20261106-4">
-  <script src="collection.js?v=20261106-4" defer></script>
-  <script src="storage.js?v=20261106-4" defer></script>
-  <script src="app.js?v=20261106-4" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261107-1">
+  <script src="collection.js?v=20261107-1" defer></script>
+  <script src="storage.js?v=20261107-1" defer></script>
+  <script src="app.js?v=20261107-1" defer></script>
 </head>
 <body data-page="home">
   <svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
@@ -73,12 +73,12 @@
         <div class="book-spine" aria-hidden="true"><i></i><i></i><i></i></div>
         <div class="ribbon" aria-hidden="true"></div>
       </div>
-        <button class="edge-turn edge-turn-prev" id="prev-page" aria-label="上一页" aria-controls="album-spread"><svg><use href="#i-chevron"/></svg></button>
-        <button class="edge-turn edge-turn-next" id="next-page" aria-label="下一页" aria-controls="album-spread"><svg><use href="#i-chevron"/></svg></button>
+        <button class="edge-turn edge-turn-prev" id="prev-page" aria-label="上一页" aria-controls="album-spread" aria-describedby="album-navigation-hint"><svg><use href="#i-chevron"/></svg></button>
+        <button class="edge-turn edge-turn-next" id="next-page" aria-label="下一页" aria-controls="album-spread" aria-describedby="album-navigation-hint"><svg><use href="#i-chevron"/></svg></button>
       </div>
       <div id="grid" class="stamp-grid" hidden aria-live="polite"></div>
       <div id="empty" class="empty-state" hidden><svg><use href="#i-stamp"/></svg><h3>这一页，等一枚心动的风景。</h3><p id="empty-text">试试其他分类，或换一个关键词。</p><button id="reset-filters" class="text-button">查看全部藏品 <span>↗</span></button></div>
-      <div class="album-controls" id="album-controls"><span class="album-hint"><svg><use href="#i-expand"/></svg> 轻点邮票，细赏每一处风景</span><div class="pagination"><span id="page-indicator" role="status" aria-live="polite">01–02 <i>/</i> 25</span></div><span class="album-edition">MEMORY IMPRESSIONS · 私人珍藏</span></div>
+      <div class="album-controls" id="album-controls"><span class="album-hint" id="album-navigation-hint"><svg><use href="#i-expand"/></svg> 点击书页两侧翻页 · 轻点邮票看详情</span><div class="pagination"><span id="page-indicator" role="status" aria-live="polite">01–02 <i>/</i> 25</span></div><span class="album-edition">MEMORY IMPRESSIONS · 私人珍藏</span></div>
     </section>
 
   </main>
